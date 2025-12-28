@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exclusive Fanned Cards (Tailwind) + Premium Modal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' };</script>
+</head>
+
+<body class="min-h-screen text-slate-100 bg-slate-950 flex items-center justify-center p-4 overflow-x-hidden">
+  <!-- Premium background -->
+  <div class="pointer-events-none fixed inset-0 -z-10">
+    <div class="absolute -top-28 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-sky-500/20 blur-3xl"></div>
+    <div class="absolute -bottom-32 right-10 h-[520px] w-[520px] rounded-full bg-indigo-500/20 blur-3xl"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(148,163,184,.12)_1px,transparent_0)] [background-size:18px_18px] opacity-40"></div>
+  </div>
+
+  <!-- Top right: theme + controls -->
+  <div class="fixed top-4 right-4 z-[9999] flex items-center gap-2">
+    <button id="playBtn"
+      class="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-extrabold backdrop-blur hover:bg-white/15">
+      ⏸ Pause
+    </button>
+    <button id="themeBtn"
+      class="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-extrabold backdrop-blur hover:bg-white/15">
+      🌙 / ☀️
+    </button>
+  </div>
+
+  <!-- Wrapper -->
+  <div class="w-full max-w-[980px]">
+    <!-- Header (exclusive) -->
+    <div class="mb-6 flex flex-col items-start gap-2">
+      <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur">
+        <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+        <span class="text-xs font-extrabold tracking-[0.22em] text-slate-200">EXCLUSIVE TEMPLATE PREVIEW</span>
+      </div>
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">
+        Smart, clean & <span class="text-sky-300">premium</span> showcase cards
+      </h1>
+      <p class="text-sm text-slate-300/90 max-w-[70ch]">
+        Click any card to open a premium preview modal with zoom/pan, thumbnails, download & keyboard controls.
+      </p>
+    </div>
+
+    <!-- Fan Wrap -->
+    <div id="fan" class="relative w-full h-[480px] sm:h-[380px]">
+      <!-- Each card root is positioned by JS (Tailwind classes) -->
+      <div class="fan-card l2" data-title="Restaurant Landing" data-img="https://picsum.photos/1600/1000?random=11" data-accent="rose">
+        <div class="cardShell"></div>
+      </div>
+
+      <div class="fan-card l1" data-title="Interior Design Landing" data-img="https://picsum.photos/1600/1000?random=22" data-accent="indigo">
+        <div class="cardShell"></div>
+      </div>
+
+      <div class="fan-card center" data-title="Living Space Guide" data-img="https://picsum.photos/1600/1000?random=33" data-accent="sky">
+        <div class="cardShell"></div>
+      </div>
+
+      <div class="fan-card r1" data-title="Real Estate Listing" data-img="https://picsum.photos/1600/1000?random=44" data-accent="emerald">
+        <div class="cardShell"></div>
+      </div>
+
+      <div class="fan-card r2" data-title="Auto Service Landing" data-img="https://picsum.photos/1600/1000?random=55" data-accent="amber">
+        <div class="cardShell"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="fixed inset-0 z-[99999] hidden items-center justify-center p-4">
+    <div id="modalBackdrop" class="absolute inset-0 bg-slate-950/75 backdrop-blur"></div>
+
+    <div class="relative w-[min(1100px,96vw)] max-h-[92vh] overflow-hidden rounded-3xl border border-white/10 bg-white/10 backdrop-blur-xl shadow-[0_70px_160px_rgba(0,0,0,.55)]">
+      <!-- header -->
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-white/5 px-4 py-3">
+        <div class="flex items-center gap-2">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-sky-500/20 border border-white/10">👁️</span>
+          <div>
+            <div id="modalTitle" class="text-sm font-extrabold text-white">Preview</div>
+            <div class="text-xs text-slate-200/80 font-semibold">Wheel: zoom • Drag: pan • ←/→: navigate</div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="prevBtn" class="rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-extrabold text-white hover:bg-white/15">◀ Prev</button>
+          <button id="nextBtn" class="rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-extrabold text-white hover:bg-white/15">Next ▶</button>
+
+          <div class="hidden sm:inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/10 px-2 py-1">
+            <span class="text-xs font-extrabold text-white/90">Zoom</span>
+            <button id="zoomOutBtn" class="rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-extrabold text-white hover:bg-white/15">−</button>
+            <button id="zoomInBtn" class="rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-extrabold text-white hover:bg-white/15">+</button>
+            <button id="resetBtn" class="rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-extrabold text-white hover:bg-white/15">Reset</button>
+          </div>
+
+          <button id="downloadBtn" class="rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-extrabold text-white hover:bg-white/15">Download</button>
+          <button id="closeBtn" class="rounded-2xl bg-sky-500 px-3 py-2 text-xs font-extrabold text-white hover:bg-sky-400">Close ✕</button>
+        </div>
+      </div>
+
+      <!-- body -->
+      <div class="grid gap-3 p-3 md:grid-cols-[1.25fr_.75fr]">
+        <!-- preview -->
+        <div id="previewBox" class="relative min-h-[340px] overflow-hidden rounded-3xl border border-white/10 bg-slate-950">
+          <!-- subtle highlight -->
+          <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(56,189,248,.18),transparent_45%),radial-gradient(circle_at_80%_50%,rgba(99,102,241,.12),transparent_50%)]"></div>
+
+          <div id="viewport" class="absolute inset-0 cursor-grab active:cursor-grabbing"></div>
+          <img id="modalImg"
+               class="absolute left-1/2 top-1/2 select-none pointer-events-none rounded-2xl"
+               style="transform: translate(-50%,-50%) scale(1);"
+               src="" alt="Preview" />
+        </div>
+
+        <!-- meta -->
+        <div class="rounded-3xl border border-white/10 bg-white/10 backdrop-blur p-4">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <p class="text-xs font-extrabold text-slate-200/80 tracking-[0.18em]">TEMPLATE</p>
+              <p id="metaName" class="mt-1 text-base font-extrabold text-white">—</p>
+            </div>
+            <span id="badge" class="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-extrabold text-white/90">
+              PREMIUM
+            </span>
+          </div>
+
+          <p class="mt-3 text-sm font-semibold text-slate-200/90 leading-relaxed" id="metaDesc">
+            Wheel to zoom, drag to pan. Press 0 to reset.
+          </p>
+
+          <div class="mt-4 grid gap-2">
+            <button id="openImgBtn" class="rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-extrabold text-white hover:bg-white/15">Open Image</button>
+            <button id="copyLinkBtn" class="rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-xs font-extrabold text-white hover:bg-white/15">Copy Image URL</button>
+          </div>
+
+          <div class="mt-4 rounded-2xl border border-white/10 bg-white/5 p-3">
+            <p class="text-xs font-extrabold text-white/90">Shortcuts</p>
+            <p class="mt-1 text-sm font-semibold text-slate-200/90">
+              Esc close • ←/→ prev/next • +/− zoom • 0 reset
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- thumbs -->
+      <div id="thumbStrip" class="flex gap-2 overflow-auto border-t border-white/10 bg-white/5 p-3"></div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Tailwind-only fanned positions =====
+    const baseCardClass =
+      "absolute inset-0 m-auto w-[72%] h-[92%] origin-[50%_75%] select-none cursor-pointer " +
+      "transition duration-500 ease-out " +
+      "hover:z-[99] hover:-translate-y-4 hover:scale-[1.03] hover:rotate-0 " +
+      "active:-translate-y-2 active:scale-[1.01] " +
+      "sm:w-[92%]";
+
+    const pos = {
+      center: "z-50 translate-x-0 rotate-0 scale-100 opacity-100",
+      l1:     "z-40 -translate-x-[22%] -rotate-[10deg] scale-[.92] opacity-95",
+      l2:     "z-20 -translate-x-[38%] -rotate-[18deg] scale-[.85] opacity-80 sm:hidden",
+      r1:     "z-40 translate-x-[22%] rotate-[10deg] scale-[.92] opacity-95",
+      r2:     "z-20 translate-x-[38%] rotate-[18deg] scale-[.85] opacity-80 sm:hidden",
+    };
+
+    const accentMap = {
+      sky:     "from-sky-400/25 via-white/5 to-indigo-400/20",
+      indigo:  "from-indigo-400/25 via-white/5 to-sky-400/20",
+      rose:    "from-rose-400/25 via-white/5 to-amber-400/20",
+      emerald: "from-emerald-400/25 via-white/5 to-sky-400/20",
+      amber:   "from-amber-400/25 via-white/5 to-rose-400/20",
+    };
+
+    // Build premium card shell (Tailwind only)
+    function buildCardInner(el, idx){
+      const title = el.dataset.title || `Template ${idx+1}`;
+      const imgBig = el.dataset.img || "";
+      const accent = el.dataset.accent || "sky";
+      const small = imgBig.replace("1600/1000", "900/650");
+
+      el.querySelector(".cardShell").outerHTML = `
+        <div class="relative h-full w-full rounded-[28px] overflow-hidden">
+          <!-- Gradient border feel -->
+          <div class="absolute inset-0 rounded-[28px] bg-gradient-to-br ${accentMap[accent] || accentMap.sky}"></div>
+          <div class="absolute inset-[1px] rounded-[27px] bg-white shadow-[0_40px_90px_rgba(0,0,0,.35)] border border-white/10 overflow-hidden">
+            <!-- subtle top shine -->
+            <div class="pointer-events-none absolute -top-24 left-1/2 h-56 w-[110%] -translate-x-1/2 rotate-6 bg-white/40 blur-3xl opacity-40"></div>
+
+            <!-- top bar -->
+            <div class="relative flex h-12 items-center justify-between px-4 bg-white/70 backdrop-blur border-b border-slate-200">
+              <div class="flex gap-2">
+                <span class="h-3 w-3 rounded-full bg-rose-400"></span>
+                <span class="h-3 w-3 rounded-full bg-amber-300"></span>
+                <span class="h-3 w-3 rounded-full bg-emerald-300"></span>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <span class="rounded-full bg-slate-900 px-2 py-1 text-[10px] font-extrabold tracking-widest text-white">EXCLUSIVE</span>
+                <span class="text-xs text-slate-500 font-extrabold">#${String(idx+1).padStart(2,"0")}</span>
+              </div>
+            </div>
+
+            <!-- title -->
+            <div class="relative px-4 pt-3">
+              <div class="flex items-center justify-between gap-2">
+                <p class="text-sm font-extrabold text-slate-900">${title}</p>
+                <span class="text-[10px] font-extrabold tracking-[0.22em] text-slate-500">CLICK TO PREVIEW</span>
+              </div>
+              <div class="mt-2 h-px w-full bg-slate-200"></div>
+            </div>
+
+            <!-- hero image -->
+            <div class="relative m-4 h-36 rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+              <img class="h-full w-full object-cover" src="${small}" alt="">
+            </div>
+
+            <!-- lines -->
+            <div class="relative mx-4 mt-2 grid gap-2">
+              <div class="h-2.5 w-[80%] rounded-full bg-slate-200"></div>
+              <div class="h-2.5 w-[60%] rounded-full bg-slate-200"></div>
+              <div class="h-2.5 w-[45%] rounded-full bg-slate-200"></div>
+            </div>
+
+            <!-- mini cards -->
+            <div class="relative m-4 mt-4 grid grid-cols-3 gap-3">
+              ${[1,2,3].map(n=>`
+                <div class="h-[70px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+                  <img class="h-full w-full object-cover" src="https://picsum.photos/260/200?random=${(idx+1)*100+n}" alt="">
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Apply positioning classes + build content
+    const fan = document.getElementById("fan");
+    const cards = Array.from(document.querySelectorAll("#fan .fan-card"));
+    cards.forEach((el, idx) => {
+      const key = (el.className.split(" ").find(x=>["l2","l1","center","r1","r2"].includes(x))) || "center";
+      el.className = `${baseCardClass} ${pos[key]}`;
+      buildCardInner(el, idx);
+    });
+
+    // ===== Theme toggle =====
+    const themeBtn = document.getElementById("themeBtn");
+    themeBtn.addEventListener("click", () => {
+      document.documentElement.classList.toggle("dark");
+      if (document.documentElement.classList.contains("dark")) {
+        document.body.className = "min-h-screen text-slate-100 bg-slate-950 flex items-center justify-center p-4 overflow-x-hidden";
+      } else {
+        document.body.className = "min-h-screen text-slate-900 bg-slate-100 flex items-center justify-center p-4 overflow-x-hidden";
+      }
+    });
+
+    // ===== Autoplay rotate + pause button =====
+    let playing = true;
+    const playBtn = document.getElementById("playBtn");
+    playBtn.addEventListener("click", () => {
+      playing = !playing;
+      playBtn.textContent = playing ? "⏸ Pause" : "▶ Play";
+    });
+
+    let rotateTimer = setInterval(() => {
+      const modal = document.getElementById("modal");
+      if (!playing) return;
+      if (!modal.classList.contains("hidden")) return; // modal open => pause
+      fan.appendChild(fan.children[0]);
+    }, 3200);
+
+    // ===== Modal + zoom/pan =====
+    const modal = document.getElementById("modal");
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const modalImg = document.getElementById("modalImg");
+    const modalTitle = document.getElementById("modalTitle");
+    const metaName = document.getElementById("metaName");
+    const metaDesc = document.getElementById("metaDesc");
+    const badge = document.getElementById("badge");
+    const thumbStrip = document.getElementById("thumbStrip");
+
+    const items = cards.map((c, i) => ({
+      i,
+      title: c.dataset.title || `Template ${i+1}`,
+      img: c.dataset.img || ""
+    }));
+
+    let activeIndex = 0;
+
+    let scale = 1, tx = 0, ty = 0;
+    let isDragging = false, sx = 0, sy = 0, stx = 0, sty = 0;
+    const previewBox = document.getElementById("previewBox");
+    const viewport = document.getElementById("viewport");
+
+    const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
+    function applyTransform(){
+      modalImg.style.transform = `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(${scale})`;
+    }
+    function resetView(){ scale=1; tx=0; ty=0; applyTransform(); }
+    function zoomTo(newScale, cx=null, cy=null){
+      const prev = scale;
+      scale = clamp(newScale, 0.6, 4);
+      if (cx!==null && cy!==null){
+        const rect = previewBox.getBoundingClientRect();
+        const px = cx - rect.left - rect.width/2;
+        const py = cy - rect.top  - rect.height/2;
+        const r = scale / prev;
+        tx = tx + px - px * r;
+        ty = ty + py - py * r;
+      }
+      applyTransform();
+    }
+
+    function renderThumbs(){
+      if (thumbStrip.dataset.ready === "1") return;
+      thumbStrip.innerHTML = items.map((it, idx) => `
+        <button class="thumbBtn group relative h-[58px] w-[92px] flex-none overflow-hidden rounded-2xl border border-white/10 bg-slate-950"
+                data-i="${idx}" title="${it.title}">
+          <img class="h-full w-full object-cover opacity-80 group-hover:opacity-100" src="${it.img}" alt="${it.title}">
+          <span class="activeRing pointer-events-none absolute inset-0 rounded-2xl ring-0 ring-sky-400/50"></span>
+        </button>
+      `).join("");
+      thumbStrip.dataset.ready = "1";
+      thumbStrip.addEventListener("click", (e) => {
+        const btn = e.target.closest(".thumbBtn");
+        if (!btn) return;
+        openModalByIndex(Number(btn.dataset.i));
+      });
+    }
+
+    function setActiveThumb(){
+      thumbStrip.querySelectorAll(".activeRing").forEach(r => r.classList.remove("ring-4"));
+      const ring = thumbStrip.querySelector(`.thumbBtn[data-i="${activeIndex}"] .activeRing`);
+      if (ring) ring.classList.add("ring-4");
+      const btn = thumbStrip.querySelector(`.thumbBtn[data-i="${activeIndex}"]`);
+      if (btn) btn.scrollIntoView({behavior:"smooth", inline:"center", block:"nearest"});
+    }
+
+    function openModalByIndex(i){
+      activeIndex = (i + items.length) % items.length;
+      const it = items[activeIndex];
+
+      modalTitle.textContent = it.title;
+      metaName.textContent = it.title;
+      metaDesc.textContent = `Premium preview of "${it.title}". Wheel to zoom, drag to pan.`;
+      badge.textContent = "PREMIUM";
+
+      modalImg.src = it.img;
+      renderThumbs();
+      setActiveThumb();
+
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      document.body.style.overflow = "hidden";
+      resetView();
+    }
+
+    function closeModal(){
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      document.body.style.overflow = "";
+      isDragging = false;
+    }
+
+    // Card click open
+    cards.forEach((c, idx) => c.addEventListener("click", () => openModalByIndex(idx)));
+
+    // Modal controls
+    document.getElementById("closeBtn").addEventListener("click", closeModal);
+    modalBackdrop.addEventListener("click", closeModal);
+    document.getElementById("prevBtn").addEventListener("click", () => openModalByIndex(activeIndex - 1));
+    document.getElementById("nextBtn").addEventListener("click", () => openModalByIndex(activeIndex + 1));
+    document.getElementById("zoomInBtn").addEventListener("click", () => zoomTo(scale + 0.2));
+    document.getElementById("zoomOutBtn").addEventListener("click", () => zoomTo(scale - 0.2));
+    document.getElementById("resetBtn").addEventListener("click", resetView);
+
+    // Wheel zoom
+    previewBox.addEventListener("wheel", (e) => {
+      if (modal.classList.contains("hidden")) return;
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.18 : 0.18;
+      zoomTo(scale + delta, e.clientX, e.clientY);
+    }, { passive:false });
+
+    // Drag pan
+    viewport.addEventListener("mousedown", (e) => {
+      if (modal.classList.contains("hidden")) return;
+      isDragging = true;
+      sx = e.clientX; sy = e.clientY;
+      stx = tx; sty = ty;
+    });
+    window.addEventListener("mousemove", (e) => {
+      if (!isDragging) return;
+      tx = stx + (e.clientX - sx);
+      ty = sty + (e.clientY - sy);
+      applyTransform();
+    });
+    window.addEventListener("mouseup", () => { isDragging = false; });
+
+    // Open/copy/download
+    document.getElementById("openImgBtn").addEventListener("click", () => modalImg.src && window.open(modalImg.src, "_blank"));
+    document.getElementById("copyLinkBtn").addEventListener("click", async () => {
+      try{
+        await navigator.clipboard.writeText(modalImg.src || "");
+        const btn = document.getElementById("copyLinkBtn");
+        const old = btn.textContent;
+        btn.textContent = "Copied ✅";
+        setTimeout(()=>btn.textContent=old, 900);
+      }catch(e){ alert("Copy failed (clipboard blocked)."); }
+    });
+    document.getElementById("downloadBtn").addEventListener("click", () => {
+      if (!modalImg.src) return;
+      const a = document.createElement("a");
+      a.href = modalImg.src;
+      a.download = (items[activeIndex].title || "preview").replace(/\s+/g,"_") + ".jpg";
+      document.body.appendChild(a);
+      a.click(); a.remove();
+    });
+
+    // Keyboard
+    document.addEventListener("keydown", (e) => {
+      if (modal.classList.contains("hidden")) return;
+      if (e.key === "Escape") closeModal();
+      if (e.key === "ArrowLeft") openModalByIndex(activeIndex - 1);
+      if (e.key === "ArrowRight") openModalByIndex(activeIndex + 1);
+      if (e.key === "+" || e.key === "=") zoomTo(scale + 0.2);
+      if (e.key === "-" || e.key === "_") zoomTo(scale - 0.2);
+      if (e.key === "0") resetView();
+    });
+
+    modalImg.addEventListener("load", () => { resetView(); setActiveThumb(); });
+  </script>
+</body>
+</html>
