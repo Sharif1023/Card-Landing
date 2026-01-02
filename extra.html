@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fanned Cards (Tailwind) + Modal Preview (6 Cards)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+  </script>
+</head>
+
+<body class="min-h-screen bg-slate-950 text-slate-100 dark:bg-slate-950 flex items-center justify-center p-4">
+  <!-- Theme Toggle -->
+  <button id="themeBtn"
+    class="fixed top-4 right-4 z-[9999] rounded-full bg-white px-4 py-2 text-xs font-extrabold text-slate-900 shadow-lg hover:bg-slate-50">
+    🌙 / ☀️
+  </button>
+
+  <!-- Fan Wrap -->
+  <div id="fan" class="relative w-full max-w-[900px] h-[460px] md:h-[460px] sm:h-[360px]">
+
+    <!-- LEFT BACK -->
+    <div class="fan-card l2"
+      data-title="Restaurant Landing"
+      data-img="https://picsum.photos/1600/1000?random=11">
+      <div class="relative h-full w-full rounded-[28px] bg-white border border-slate-200 shadow-[0_40px_90px_rgba(0,0,0,.35)] overflow-hidden">
+        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_25%_15%,rgba(56,189,248,.35),transparent_40%),radial-gradient(circle_at_80%_30%,rgba(99,102,241,.25),transparent_45%)]"></div>
+
+        <div class="relative flex h-12 items-center justify-between px-4 bg-white/70 backdrop-blur border-b border-slate-200">
+          <div class="flex gap-2">
+            <span class="h-3 w-3 rounded-full bg-rose-400"></span>
+            <span class="h-3 w-3 rounded-full bg-amber-300"></span>
+            <span class="h-3 w-3 rounded-full bg-emerald-300"></span>
+          </div>
+          <span class="text-xs text-slate-500 font-semibold">Template</span>
+        </div>
+
+        <div class="relative m-4 h-36 rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+          <img class="h-full w-full object-cover" src="https://picsum.photos/800/600?random=11" alt="">
+        </div>
+
+        <div class="relative mx-4 mt-3 grid gap-2">
+          <div class="h-2.5 w-[80%] rounded-full bg-slate-200"></div>
+          <div class="h-2.5 w-[60%] rounded-full bg-slate-200"></div>
+          <div class="h-2.5 w-[45%] rounded-full bg-slate-200"></div>
+        </div>
+
+        <div class="relative m-4 mt-4 grid grid-cols-3 gap-3">
+          <div class="h-[70px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img class="h-full w-full object-cover" src="https://picsum.photos/240/200?random=111" alt="">
+          </div>
+          <div class="h-[70px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img class="h-full w-full object-cover" src="https://picsum.photos/240/200?random=112" alt="">
+          </div>
+          <div class="h-[70px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img class="h-full w-full object-cover" src="https://picsum.photos/240/200?random=113" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEFT -->
+    <div class="fan-card l1"
+      data-title="Interior Design Landing"
+      data-img="https://picsum.photos/1600/1000?random=22">
+      <div class="relative h-full w-full rounded-[28px] bg-white border border-slate-200 shadow-[0_40px_90px_rgba(0,0,0,.35)] overflow-hidden">
+        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_25%_15%,rgba(56,189,248,.35),transparent_40%),radial-gradient(circle_at_80%_30%,rgba(99,102,241,.25),transparent_45%)]"></div>
+
+        <div class="relative flex h-12 items-center justify-between px-4 bg-white/70 backdrop-blur border-b border-slate-200">
+          <div class="flex gap-2">
+            <span class="h-3 w-3 rounded-full bg-rose-400"></span>
+            <span class="h-3 w-3 rounded-full bg-amber-300"></span>
+            <span class="h-3 w-3 rounded-full bg-emerald-300"></span>
+          </div>
+          <span class="text-xs text-slate-500 font-semibold">Landing</span>
+        </div>
+
+        <div class="relative m-4 h-36 rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+          <img class="h-full w-full object-cover" src="https://picsum.photos/800/600?random=22" alt="">
+        </div>
+
+        <div class="relative mx-4 mt-3 grid gap-2">
+          <div class="h-2.5 w-[60%] rounded-full bg-slate-200"></div>
+          <div class="h-2.5 w-[80%] rounded-full bg-slate-200"></div>
+          <div class="h-2.5 w-[45%] rounded-full bg-slate-200"></div>
+        </div>
+
+        <div class="relative m-4 mt-4 grid grid-cols-3 gap-3">
+          <div class="h-[70px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img class="h-full w-full object-cover" src="https://picsum.photos/240/200?random=221" alt="">
+          </div>
+          <div class="h-[70px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img class="h-full w-full object-cover" src="https://picsum.photos/240/200?random=222" alt="">
+          </div>
+          <div class="h-[70px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img class="h-full w-full object-cover" src="https://picsum.photos/240/200?random=223" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="fan-card center"
+      data-title="Living Space Guide"
+      data-img="https://picsum.photos/1600/1000?random=33">
+      <div class="relative h-full w-full rounded-[28px] bg-white border border-slate-200 shadow-[0_40px_90px_rgba(0,0,0,.35)] overflow-hidden">
+        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_25%_15%,rgba(56,189,248,.35),transparent_40%),radial-gradient(circle_at_80%_30%,rgba(99,102,241,.25),transparent_45%)]"></div>
+
+        <div class="relative flex h-12 items-center justify-between px-4 bg-white/70 backdrop-blur border-b border-slate-200">
+          <div class="flex gap-2">
+            <span class="h-3 w-3 rounded-full bg-rose-400"></span>
+            <span class="h-3 w-3 rounded-full bg-amber-300"></span>
+            <span class="h-3 w-3 rounded-full bg-emerald-300"></span>
+          </div>
+          <span class="text-xs text-slate-500 font-semibold">Preview</span>
+        </div>
+
+        <div class="relative pt-4 text-center">
+          <p class="text-[11px] font-extrabold tracking-[0.25em] text-slate-500">YOUR ONLINE GUIDE</p>
+          <h3 class="mt-1 text-lg font-extrabold text-slate-900">
+            PERFECT <span class="text-sky-600">LIVING SPACE</span>
+          </h3>
+          <p class="mt-1 text-xs font-semibold text-slate-500">Click to preview</p>
+        </div>
+
+        <div class="relative m-4 h-36 rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+          <img class="h-full w-full object-cover" src="https://picsum.photos/800/600?random=33" alt="">
+        </div>
+
+        <div class="relative mx-4 mt-3 grid gap-2">
+          <div class="h-2.5 w-[80%] rounded-full bg-slate-200"></div>
+          <div class="h-2.5 w-[45%] rounded-full bg-slate-200"></div>
+          <div class="h-2.5 w-[60%] rounded-full bg-slate-200"></div>
+        </div>
+
+        <div class="relative m-4 mt-4 grid grid-cols-3 gap-3">
+          <div class="h-[70px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img class="h-full w-full object-cover" src="https://picsum.photos/240/200?random=331" alt="">
+          </div>
+          <div class="h-[70px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img class="h-full w-full object-cover" src="https://picsum.photos/240/200?random=332" alt="">
+          </div>
+          <div class="h-[70px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img class="h-full w-full object-cover" src="https://picsum.photos/240/200?random=333" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="fan-card r1"
+      data-title="Real Estate Listing"
+      data-img="https://picsum.photos/1600/1000?random=44">
+      <div class="relative h-full w-full rounded-[28px] bg-white border border-slate-200 shadow-[0_40px_90px_rgba(0,0,0,.35)] overflow-hidden">
+        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_25%_15%,rgba(56,189,248,.35),transparent_40%),radial-gradient(circle_at_80%_30%,rgba(99,102,241,.25),transparent_45%)]"></div>
+
+        <div class="relative flex h-12 items-center justify-between px-4 bg-white/70 backdrop-blur border-b border-slate-200">
+          <div class="flex gap-2">
+            <span class="h-3 w-3 rounded-full bg-rose-400"></span>
+            <span class="h-3 w-3 rounded-full bg-amber-300"></span>
+            <span class="h-3 w-3 rounded-full bg-emerald-300"></span>
+          </div>
+          <span class="text-xs text-slate-500 font-semibold">Showcase</span>
+        </div>
+
+        <div class="relative m-4 h-36 rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+          <img class="h-full w-full object-cover" src="https://picsum.photos/800/600?random=44" alt="">
+        </div>
+
+        <div class="relative mx-4 mt-3 grid gap-2">
+          <div class="h-2.5 w-[45%] rounded-full bg-slate-200"></div>
+          <div class="h-2.5 w-[60%] rounded-full bg-slate-200"></div>
+          <div class="h-2.5 w-[80%] rounded-full bg-slate-200"></div>
+        </div>
+
+        <div class="relative m-4 mt-4 grid grid-cols-3 gap-3">
+          <div class="h-[70px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img class="h-full w-full object-cover" src="https://picsum.photos/240/200?random=441" alt="">
+          </div>
+          <div class="h-[70px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img class="h-full w-full object-cover" src="https://picsum.photos/240/200?random=442" alt="">
+          </div>
+          <div class="h-[70px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img class="h-full w-full object-cover" src="https://picsum.photos/240/200?random=443" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT BACK -->
+    <div class="fan-card r2"
+      data-title="Auto Service Landing"
+      data-img="https://picsum.photos/1600/1000?random=55">
+      <div class="relative h-full w-full rounded-[28px] bg-white border border-slate-200 shadow-[0_40px_90px_rgba(0,0,0,.35)] overflow-hidden">
+        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_25%_15%,rgba(56,189,248,.35),transparent_40%),radial-gradient(circle_at_80%_30%,rgba(99,102,241,.25),transparent_45%)]"></div>
+
+        <div class="relative flex h-12 items-center justify-between px-4 bg-white/70 backdrop-blur border-b border-slate-200">
+          <div class="flex gap-2">
+            <span class="h-3 w-3 rounded-full bg-rose-400"></span>
+            <span class="h-3 w-3 rounded-full bg-amber-300"></span>
+            <span class="h-3 w-3 rounded-full bg-emerald-300"></span>
+          </div>
+          <span class="text-xs text-slate-500 font-semibold">Portfolio</span>
+        </div>
+
+        <div class="relative m-4 h-36 rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+          <img class="h-full w-full object-cover" src="https://picsum.photos/800/600?random=55" alt="">
+        </div>
+
+        <div class="relative mx-4 mt-3 grid gap-2">
+          <div class="h-2.5 w-[60%] rounded-full bg-slate-200"></div>
+          <div class="h-2.5 w-[45%] rounded-full bg-slate-200"></div>
+          <div class="h-2.5 w-[80%] rounded-full bg-slate-200"></div>
+        </div>
+
+        <div class="relative m-4 mt-4 grid grid-cols-3 gap-3">
+          <div class="h-[70px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img class="h-full w-full object-cover" src="https://picsum.photos/240/200?random=551" alt="">
+          </div>
+          <div class="h-[70px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img class="h-full w-full object-cover" src="https://picsum.photos/240/200?random=552" alt="">
+          </div>
+          <div class="h-[70px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img class="h-full w-full object-cover" src="https://picsum.photos/240/200?random=553" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXTRA (6th) CARD -->
+    <div class="fan-card r3"
+      data-title="Coffee Shop Landing"
+      data-img="https://picsum.photos/1600/1000?random=66">
+      <div class="relative h-full w-full rounded-[28px] bg-white border border-slate-200 shadow-[0_40px_90px_rgba(0,0,0,.35)] overflow-hidden">
+        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,197,94,.20),transparent_45%),radial-gradient(circle_at_80%_30%,rgba(168,85,247,.18),transparent_45%)]"></div>
+
+        <div class="relative flex h-12 items-center justify-between px-4 bg-white/70 backdrop-blur border-b border-slate-200">
+          <div class="flex gap-2">
+            <span class="h-3 w-3 rounded-full bg-rose-400"></span>
+            <span class="h-3 w-3 rounded-full bg-amber-300"></span>
+            <span class="h-3 w-3 rounded-full bg-emerald-300"></span>
+          </div>
+          <span class="text-xs text-slate-500 font-semibold">Landing</span>
+        </div>
+
+        <div class="relative pt-4 text-center">
+          <p class="text-[11px] font-extrabold tracking-[0.25em] text-slate-500">FRESHLY BREWED</p>
+          <h3 class="mt-1 text-lg font-extrabold text-slate-900">
+            COFFEE <span class="text-emerald-600">CORNER</span>
+          </h3>
+          <p class="mt-1 text-xs font-semibold text-slate-500">Click to preview</p>
+        </div>
+
+        <div class="relative m-4 h-36 rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+          <img class="h-full w-full object-cover" src="https://picsum.photos/800/600?random=66" alt="">
+        </div>
+
+        <div class="relative mx-4 mt-3 grid gap-2">
+          <div class="h-2.5 w-[72%] rounded-full bg-slate-200"></div>
+          <div class="h-2.5 w-[54%] rounded-full bg-slate-200"></div>
+          <div class="h-2.5 w-[82%] rounded-full bg-slate-200"></div>
+        </div>
+
+        <div class="relative m-4 mt-4 grid grid-cols-3 gap-3">
+          <div class="h-[70px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img class="h-full w-full object-cover" src="https://picsum.photos/240/200?random=661" alt="">
+          </div>
+          <div class="h-[70px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img class="h-full w-full object-cover" src="https://picsum.photos/240/200?random=662" alt="">
+          </div>
+          <div class="h-[70px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img class="h-full w-full object-cover" src="https://picsum.photos/240/200?random=663" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="fixed inset-0 z-[99999] hidden items-center justify-center p-4">
+    <div id="modalBackdrop" class="absolute inset-0 bg-slate-950/70 backdrop-blur"></div>
+
+    <div class="relative w-[min(1060px,96vw)] max-h-[92vh] overflow-hidden rounded-2xl border border-white/10 bg-white/90 shadow-[0_60px_140px_rgba(0,0,0,.55)]">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white/60 px-3 py-3">
+        <div id="modalTitle" class="text-sm font-extrabold text-slate-900">Preview</div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="prevBtn" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold text-slate-900 hover:bg-slate-50">◀ Prev</button>
+          <button id="nextBtn" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold text-slate-900 hover:bg-slate-50">Next ▶</button>
+
+          <div class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1">
+            <span class="text-xs font-extrabold text-slate-900">Zoom</span>
+            <button id="zoomOutBtn" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold text-slate-900 hover:bg-slate-50">−</button>
+            <button id="zoomInBtn" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold text-slate-900 hover:bg-slate-50">+</button>
+            <button id="resetBtn" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold text-slate-900 hover:bg-slate-50">Reset</button>
+          </div>
+
+          <button id="downloadBtn" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold text-slate-900 hover:bg-slate-50">Download</button>
+          <button id="closeBtn" class="rounded-xl bg-sky-600 px-3 py-2 text-xs font-extrabold text-white hover:bg-sky-700">Close ✕</button>
+        </div>
+      </div>
+
+      <div class="grid gap-3 p-3 md:grid-cols-[1.25fr_.75fr]">
+        <div id="previewBox" class="relative min-h-[320px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-900">
+          <div id="viewport" class="absolute inset-0 cursor-grab active:cursor-grabbing"></div>
+
+          <img id="modalImg"
+            class="absolute left-1/2 top-1/2 select-none pointer-events-none"
+            style="transform: translate(-50%,-50%) scale(1);"
+            src=""
+            alt="Preview" />
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-3">
+          <p class="text-xs font-extrabold text-slate-600">Template name</p>
+          <p id="metaName" class="mt-1 text-sm font-extrabold text-slate-900">—</p>
+
+          <p class="mt-3 text-xs font-extrabold text-slate-600">Details</p>
+          <p id="metaDesc" class="mt-1 text-sm font-semibold text-slate-700 leading-relaxed">
+            Wheel to zoom, drag to pan.
+          </p>
+
+          <div class="mt-3 grid gap-2">
+            <button id="openImgBtn" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold text-slate-900 hover:bg-slate-50">Open Image</button>
+            <button id="copyLinkBtn" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-extrabold text-slate-900 hover:bg-slate-50">Copy Image URL</button>
+          </div>
+
+          <p class="mt-3 text-xs font-extrabold text-slate-600">Shortcuts</p>
+          <p class="mt-1 text-sm font-semibold text-slate-700 leading-relaxed">
+            <b>Esc</b> close • <b>←/→</b> prev/next • <b>+</b>/<b>-</b> zoom • <b>0</b> reset
+          </p>
+        </div>
+      </div>
+
+      <div id="thumbStrip" class="flex gap-2 overflow-auto border-t border-slate-200 bg-white/60 p-3"></div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Tailwind-position classes for fanned cards =====
+    const baseCardClass =
+      "absolute inset-0 m-auto w-[72%] h-[92%] origin-[50%_75%] transition duration-500 ease-out cursor-pointer select-none " +
+      "hover:z-[99] hover:-translate-y-4 hover:scale-[1.03] hover:rotate-0 " +
+      "sm:w-[92%]";
+
+    // 6-card fan positions
+    const pos = {
+      center: "z-60 translate-x-0 translate-y-0 rotate-0 scale-100",
+      l1:     "z-50 -translate-x-[18%] translate-y-0 -rotate-[9deg] scale-[.94]",
+      l2:     "z-30 -translate-x-[34%] translate-y-0 -rotate-[17deg] scale-[.86] opacity-80 sm:hidden",
+      r1:     "z-50 translate-x-[18%] translate-y-0 rotate-[9deg] scale-[.94]",
+      r2:     "z-30 translate-x-[34%] translate-y-0 rotate-[17deg] scale-[.86] opacity-80 sm:hidden",
+      r3:     "z-10 translate-x-[48%] translate-y-0 rotate-[25deg] scale-[.78] opacity-70 sm:hidden",
+    };
+
+    // strip 'fan-card' token so className is the position keyword
+    document.querySelectorAll(".fan-card").forEach(el => {
+      el.className = el.className.replace("fan-card", "").trim();
+    });
+
+    // apply base + position classes
+    document.querySelectorAll("#fan > div").forEach(el => {
+      const key = el.className.trim();
+      el.className = `${baseCardClass} ${pos[key] || ""}`;
+    });
+
+    // ===== Theme toggle =====
+    const themeBtn = document.getElementById("themeBtn");
+    themeBtn.addEventListener("click", () => {
+      document.documentElement.classList.toggle("dark");
+      if (document.documentElement.classList.contains("dark")) {
+        document.body.className = "min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4";
+      } else {
+        document.body.className = "min-h-screen bg-slate-100 text-slate-900 flex items-center justify-center p-4";
+      }
+    });
+
+    // ===== Auto rotate (pause while modal open) =====
+    const fan = document.getElementById("fan");
+    let rotateTimer = setInterval(() => {
+      if (!document.getElementById("modal").classList.contains("hidden")) return;
+      fan.appendChild(fan.children[0]);
+    }, 3500);
+
+    // ===== Modal logic =====
+    const modal = document.getElementById("modal");
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const modalImg = document.getElementById("modalImg");
+    const modalTitle = document.getElementById("modalTitle");
+    const metaName = document.getElementById("metaName");
+    const metaDesc = document.getElementById("metaDesc");
+    const thumbStrip = document.getElementById("thumbStrip");
+
+    const cards = Array.from(document.querySelectorAll("#fan > div"));
+    const items = cards.map((c, i) => ({
+      i,
+      title: c.dataset.title || `Preview ${i + 1}`,
+      img: c.dataset.img || ""
+    }));
+
+    let activeIndex = 0;
+
+    // ===== Zoom/Pan state =====
+    let scale = 1, tx = 0, ty = 0;
+    let isDragging = false, sx = 0, sy = 0, stx = 0, sty = 0;
+
+    const previewBox = document.getElementById("previewBox");
+    const viewport = document.getElementById("viewport");
+
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+    function applyTransform() {
+      modalImg.style.transform =
+        `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(${scale})`;
+    }
+    function resetView() { scale = 1; tx = 0; ty = 0; applyTransform(); }
+    function zoomTo(newScale, cx = null, cy = null) {
+      const prev = scale;
+      scale = clamp(newScale, 0.6, 4);
+
+      if (cx !== null && cy !== null) {
+        const rect = previewBox.getBoundingClientRect();
+        const px = cx - rect.left - rect.width / 2;
+        const py = cy - rect.top - rect.height / 2;
+        const r = scale / prev;
+        tx = tx + px - px * r;
+        ty = ty + py - py * r;
+      }
+      applyTransform();
+    }
+
+    function renderThumbs() {
+      if (thumbStrip.dataset.ready === "1") return;
+      thumbStrip.innerHTML = items.map((it, idx) => `
+        <button class="thumbBtn group relative h-[58px] w-[92px] flex-none overflow-hidden rounded-2xl border border-slate-200 bg-slate-900"
+                data-i="${idx}" title="${it.title}">
+          <img class="h-full w-full object-cover opacity-90 group-hover:opacity-100" src="${it.img}" alt="${it.title}">
+          <span class="activeRing pointer-events-none absolute inset-0 ring-0 ring-sky-400/40 rounded-2xl"></span>
+        </button>
+      `).join("");
+      thumbStrip.dataset.ready = "1";
+
+      thumbStrip.addEventListener("click", (e) => {
+        const btn = e.target.closest(".thumbBtn");
+        if (!btn) return;
+        openModalByIndex(Number(btn.dataset.i));
+      });
+    }
+
+    function setActiveThumb() {
+      const rings = thumbStrip.querySelectorAll(".thumbBtn .activeRing");
+      rings.forEach(r => r.classList.remove("ring-4"));
+
+      const active = thumbStrip.querySelector(`.thumbBtn[data-i="${activeIndex}"] .activeRing`);
+      if (active) active.classList.add("ring-4");
+
+      const activeBtn = thumbStrip.querySelector(`.thumbBtn[data-i="${activeIndex}"]`);
+      if (activeBtn) activeBtn.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    }
+
+    function openModalByIndex(i) {
+      activeIndex = (i + items.length) % items.length;
+      const it = items[activeIndex];
+
+      modalTitle.textContent = it.title;
+      metaName.textContent = it.title;
+      metaDesc.textContent = `Preview of "${it.title}". Wheel to zoom, drag to pan.`;
+
+      modalImg.src = it.img;
+
+      renderThumbs();
+      setActiveThumb();
+
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      document.body.style.overflow = "hidden";
+      resetView();
+    }
+
+    function closeModal() {
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      document.body.style.overflow = "";
+      isDragging = false;
+    }
+
+    cards.forEach((c, idx) => c.addEventListener("click", () => openModalByIndex(idx)));
+
+    document.getElementById("closeBtn").addEventListener("click", closeModal);
+    modalBackdrop.addEventListener("click", closeModal);
+
+    document.getElementById("prevBtn").addEventListener("click", () => openModalByIndex(activeIndex - 1));
+    document.getElementById("nextBtn").addEventListener("click", () => openModalByIndex(activeIndex + 1));
+
+    // Wheel zoom
+    previewBox.addEventListener("wheel", (e) => {
+      if (modal.classList.contains("hidden")) return;
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.18 : 0.18;
+      zoomTo(scale + delta, e.clientX, e.clientY);
+    }, { passive: false });
+
+    // Drag pan
+    viewport.addEventListener("mousedown", (e) => {
+      if (modal.classList.contains("hidden")) return;
+      isDragging = true;
+      sx = e.clientX; sy = e.clientY;
+      stx = tx; sty = ty;
+    });
+    window.addEventListener("mousemove", (e) => {
+      if (!isDragging) return;
+      tx = stx + (e.clientX - sx);
+      ty = sty + (e.clientY - sy);
+      applyTransform();
+    });
+    window.addEventListener("mouseup", () => { isDragging = false; });
+
+    // Buttons zoom/reset
+    document.getElementById("zoomInBtn").addEventListener("click", () => zoomTo(scale + 0.2));
+    document.getElementById("zoomOutBtn").addEventListener("click", () => zoomTo(scale - 0.2));
+    document.getElementById("resetBtn").addEventListener("click", resetView);
+
+    // Open image + copy
+    document.getElementById("openImgBtn").addEventListener("click", () => {
+      if (modalImg.src) window.open(modalImg.src, "_blank");
+    });
+
+    document.getElementById("copyLinkBtn").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(modalImg.src || "");
+        const btn = document.getElementById("copyLinkBtn");
+        const old = btn.textContent;
+        btn.textContent = "Copied ✅";
+        setTimeout(() => btn.textContent = old, 900);
+      } catch (e) {
+        alert("Copy failed (clipboard blocked).");
+      }
+    });
+
+    // Download
+    document.getElementById("downloadBtn").addEventListener("click", () => {
+      if (!modalImg.src) return;
+      const a = document.createElement("a");
+      a.href = modalImg.src;
+      a.download = (items[activeIndex].title || "preview").replace(/\s+/g, "_") + ".jpg";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    });
+
+    // Keyboard
+    document.addEventListener("keydown", (e) => {
+      if (modal.classList.contains("hidden")) return;
+      if (e.key === "Escape") closeModal();
+      if (e.key === "ArrowLeft") openModalByIndex(activeIndex - 1);
+      if (e.key === "ArrowRight") openModalByIndex(activeIndex + 1);
+      if (e.key === "+" || e.key === "=") zoomTo(scale + 0.2);
+      if (e.key === "-" || e.key === "_") zoomTo(scale - 0.2);
+      if (e.key === "0") resetView();
+    });
+
+    modalImg.addEventListener("load", () => { resetView(); setActiveThumb(); });
+  </script>
+</body>
+</html>
