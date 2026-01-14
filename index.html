@@ -1,500 +1,781 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Fanned Cards + Modal Preview (Zoom/Pan/Thumbs)</title>
-
-<script src="https://cdn.tailwindcss.com"></script>
-
-<style>
-:root{ --bg:#0f172a; --card:#fff; --border:#e2e8f0; }
-.light{ --bg:#f8fafc; --card:#fff; --border:#e2e8f0; }
-
-body{
-  background:var(--bg);
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transition:.35s;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans";
-}
-
-/* Fan Wrap */
-.fan-wrap{ position:relative; width:100%; max-width:900px; height:460px; padding:0 10px; }
-
-/* Card */
-.fan-card{
-  position:absolute; inset:0; margin:auto;
-  width:72%; height:92%;
-  background:var(--card);
-  border-radius:28px;
-  border:1px solid var(--border);
-  box-shadow:0 40px 90px rgba(0,0,0,.35);
-  overflow:hidden;
-  transform-origin:50% 75%;
-  transition: transform .6s ease, box-shadow .6s ease;
-  cursor:pointer;
-  user-select:none;
-}
-.fan-card:hover{
-  z-index:10 !important;
-  transform:translateY(-18px) scale(1.03) rotate(0deg)!important;
-  box-shadow:0 50px 110px rgba(0,0,0,.42);
-}
-.fan-card:active{ transform:translateY(-10px) scale(1.01) rotate(0deg)!important; }
-
-/* Positions */
-.center{z-index:5;}
-.l1{z-index:4;transform:translateX(-22%) rotate(-10deg) scale(.92);}
-.l2{z-index:2;transform:translateX(-38%) rotate(-18deg) scale(.85);opacity:.82}
-.r1{z-index:4;transform:translateX(22%) rotate(10deg) scale(.92);}
-.r2{z-index:2;transform:translateX(38%) rotate(18deg) scale(.85);opacity:.82}
-
-/* UI parts */
-.topbar{
-  height:46px; display:flex; align-items:center; justify-content:space-between;
-  padding:0 16px; backdrop-filter:blur(12px); background:#ffffffcc;
-  border-bottom:1px solid var(--border);
-}
-.dots{display:flex;gap:7px}
-.dot{width:11px;height:11px;border-radius:999px}
-
-.hero-img{
-  margin:18px; height:140px; border-radius:22px; overflow:hidden;
-  border:1px solid var(--border); background:#0b1220;
-}
-.hero-img img{ width:100%; height:100%; object-fit:cover; display:block; }
-
-.lines{ margin:14px 18px; display:grid; gap:10px; }
-.line{ height:10px; background:#e5e7eb; border-radius:999px; }
-.w1{width:60%} .w2{width:45%} .w3{width:80%}
-
-.mini-cards{ margin:16px 18px; display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
-.mini{ height:70px; border-radius:16px; overflow:hidden; border:1px solid var(--border); background:#0b1220; }
-.mini img{ width:100%; height:100%; object-fit:cover; display:block; }
-
-/* Toggle */
-.toggle{
-  position:fixed; top:18px; right:18px;
-  background:#fff; border-radius:999px; padding:7px 14px;
-  font-size:13px; cursor:pointer; box-shadow:0 10px 30px rgba(0,0,0,.2);
-  user-select:none;
-}
-
-/* Modal */
-.modal{
-  position:fixed; inset:0; display:none; align-items:center; justify-content:center;
-  padding:18px; z-index:9999;
-}
-.modal.open{ display:flex; }
-.modal-backdrop{
-  position:absolute; inset:0;
-  background: rgba(2,6,23,.72);
-  backdrop-filter: blur(8px);
-}
-.modal-panel{
-  position:relative;
-  width:min(1060px, 96vw);
-  max-height: 92vh;
-  border-radius: 22px;
-  border: 1px solid rgba(226,232,240,.18);
-  background: rgba(255,255,255,.92);
-  box-shadow: 0 60px 140px rgba(0,0,0,.55);
-  overflow:hidden;
-  transform: translateY(8px) scale(.98);
-  opacity: 0;
-  transition: .18s ease;
-}
-.modal.open .modal-panel{ transform: translateY(0) scale(1); opacity:1; }
-
-.modal-head{
-  display:flex; align-items:center; justify-content:space-between; gap: 10px;
-  padding: 12px 14px;
-  border-bottom: 1px solid rgba(226,232,240,.7);
-  background: rgba(255,255,255,.65);
-}
-.modal-title{ font-weight: 900; color: #0f172a; font-size: 14px; letter-spacing:.02em; }
-.modal-actions{ display:flex; flex-wrap:wrap; gap:8px; }
-
-.btn{
-  border:1px solid rgba(226,232,240,1);
-  background:#fff;
-  padding: 8px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 800;
-  color:#0f172a;
-  cursor:pointer;
-}
-.btn:hover{ background:#f8fafc; }
-.btn.primary{ border-color: rgba(2,132,199,.25); background:#0284c7; color:#fff; }
-.btn.primary:hover{ background:#0369a1; }
-
-.modal-body{
-  display:grid;
-  grid-template-columns: 1.25fr .75fr;
-  gap: 14px;
-  padding: 14px;
-}
-
-/* Preview (zoom/pan) */
-.preview{
-  border-radius: 18px;
-  overflow:hidden;
-  border:1px solid rgba(226,232,240,.9);
-  background:#0b1220;
-  min-height: 320px;
-  position:relative;
-}
-.preview-viewport{
-  position:absolute; inset:0;
-  cursor: grab;
-}
-.preview-viewport.grabbing{ cursor: grabbing; }
-.preview-img{
-  position:absolute;
-  left:50%; top:50%;
-  transform: translate(-50%,-50%) scale(1);
-  transform-origin: center center;
-  will-change: transform;
-  user-select:none;
-  pointer-events:none;
-  max-width:none; /* allow zoom */
-  max-height:none;
-}
-
-/* Thumbnail strip */
-.thumbs{
-  display:flex;
-  gap:10px;
-  overflow:auto;
-  padding: 10px 12px 12px;
-  border-top: 1px solid rgba(226,232,240,.7);
-  background: rgba(255,255,255,.65);
-}
-.thumb{
-  width: 92px;
-  height: 58px;
-  border-radius: 14px;
-  overflow:hidden;
-  border:1px solid rgba(226,232,240,.9);
-  background:#0b1220;
-  cursor:pointer;
-  flex: 0 0 auto;
-  opacity:.9;
-  transition:.15s ease;
-}
-.thumb:hover{ transform: translateY(-2px); opacity:1; }
-.thumb.active{ outline: 3px solid rgba(2,132,199,.35); opacity:1; }
-.thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
-
-.meta{
-  border-radius: 18px;
-  border:1px solid rgba(226,232,240,.9);
-  background:#fff;
-  padding: 14px;
-}
-.meta .k{ font-size:12px; color:#475569; font-weight:800; }
-.meta .v{ margin-top:6px; font-size:13px; color:#0f172a; font-weight:900; }
-.meta .desc{ margin-top:10px; font-size:13px; color:#334155; line-height:1.55; }
-.meta .row{ display:grid; gap:10px; margin-top:14px; }
-
-.pill{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:8px 10px;
-  border:1px solid rgba(226,232,240,1);
-  border-radius: 14px;
-  background:#fff;
-  font-size:12px;
-  font-weight:900;
-  color:#0f172a;
-}
-
-@media(max-width:860px){
-  .modal-body{ grid-template-columns: 1fr; }
-}
-@media(max-width:768px){
-  .fan-wrap{height:360px}
-  .fan-card{width:92%}
-  .l2,.r2{display:none}
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fanned Product Cards + Search + Modal + Order (Tailwind Only)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body>
+<body class="min-h-screen flex items-center justify-center font-sans text-emerald-950 bg-[#F2FFF6]">
 
-<div class="toggle" id="themeBtn">🌙 / ☀️</div>
 
-<div class="fan-wrap" id="fan">
 
-  <!-- LEFT BACK -->
-  <div class="fan-card l2" data-title="Restaurant Landing" data-img="https://picsum.photos/1400/900?random=11">
-    <div class="topbar">
-      <div class="dots">
-        <span class="dot bg-red-400"></span><span class="dot bg-yellow-400"></span><span class="dot bg-green-400"></span>
-      </div>
-      <span class="text-xs text-slate-500">Template</span>
+  <!-- TOP BAR: SEARCH -->
+  <div class="fixed top-4 left-1/2 -translate-x-1/2 z-[99999] w-[min(720px,92vw)]">
+    <div class="flex gap-2 items-center bg-white/80 backdrop-blur-xl border border-emerald-200 rounded-2xl shadow-[0_14px_40px_rgba(2,6,23,.12)] px-3 py-2">
+      <div class="text-sm font-extrabold text-emerald-800 px-2">Search</div>
+      <input id="searchInput" type="text" placeholder="Type: shirt / pant / shoe / cap / sunglasses"
+        class="w-full bg-transparent outline-none text-sm font-semibold text-emerald-950 placeholder:text-emerald-700/60"
+      />
+      <button id="clearBtn"
+        class="px-3 py-2 text-xs font-extrabold rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50">
+        Clear
+      </button>
     </div>
-    <div class="hero-img"><img src="https://picsum.photos/700/500?random=11" alt=""></div>
-    <div class="lines"><div class="line w3"></div><div class="line w1"></div></div>
-    <div class="mini-cards">
-      <div class="mini"><img src="https://picsum.photos/220?random=111" alt=""></div>
-      <div class="mini"><img src="https://picsum.photos/220?random=112" alt=""></div>
-      <div class="mini"><img src="https://picsum.photos/220?random=113" alt=""></div>
-    </div>
+    <div id="resultHint" class="mt-2 text-center text-xs font-semibold text-emerald-900/70"></div>
   </div>
 
-  <!-- LEFT -->
-  <div class="fan-card l1" data-title="Interior Design Landing" data-img="https://picsum.photos/1400/900?random=22">
-    <div class="topbar">
-      <div class="dots">
-        <span class="dot bg-red-400"></span><span class="dot bg-yellow-400"></span><span class="dot bg-green-400"></span>
+  <!-- FAN WRAP -->
+  <div id="fan" class="relative w-full max-w-[600px] h-[650px] px-2 mt-24">
+
+    <!-- =========================
+         CARD TEMPLATE NOTES
+         Each card uses:
+         data-key, data-title, data-desc,
+         data-price, data-stock, data-sizes, data-colors,
+         data-images (comma-separated)
+    ========================== -->
+
+    <!-- 1) SHIRT -->
+    <div class="fan-card absolute inset-0 m-auto
+      w-[56%] h-[95%]
+      rounded-[30px] overflow-hidden
+      border border-emerald-200/70
+      bg-gradient-to-b from-emerald-50 to-white
+      cursor-pointer select-none
+      transition-transform duration-[600ms] ease-[cubic-bezier(.2,.9,.2,1)]
+      transition-shadow duration-[600ms]
+      [transform-origin:50%_75%]
+      shadow-[0_44px_95px_rgba(2,6,23,.26)]
+      hover:shadow-[0_54px_120px_rgba(2,6,23,.32)]
+      hover:-translate-y-4 hover:scale-[1.03]
+      "
+      data-key="shirt"
+      data-title="Shirt Collection"
+      data-desc="Premium shirts — casual & formal. Soft fabric, clean stitch, daily comfort."
+      data-price="৳ 799"
+      data-stock="In Stock"
+      data-sizes="S, M, L, XL, XXL"
+      data-colors="White, Black, Navy, Olive"
+      data-images="
+        https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1600&q=80,
+        https://images.unsplash.com/photo-1520975958225-1f6538a6f0f9?auto=format&fit=crop&w=1600&q=80,
+        https://images.unsplash.com/photo-1520975682031-a90f57c70c07?auto=format&fit=crop&w=1600&q=80,
+        https://images.unsplash.com/photo-1516826957135-700dedea698c?auto=format&fit=crop&w=1600&q=80
+      "
+    >
+      <div class="h-12 px-4 flex items-center justify-between bg-white/70 backdrop-blur-xl border-b border-emerald-200/60">
+        <div class="flex gap-2">
+          <span class="w-3 h-3 rounded-full bg-red-400"></span>
+          <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
+          <span class="w-3 h-3 rounded-full bg-green-400"></span>
+        </div>
+        <span class="text-xs font-extrabold text-emerald-800/80">Shirt</span>
       </div>
-      <span class="text-xs text-slate-500">Landing</span>
+
+      <div class="m-[18px] h-[200px] rounded-[22px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+        <img class="w-full h-full object-cover block"
+          src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=80" alt="Shirt">
+      </div>
+
+      <div class="mx-[18px] grid gap-2">
+        <div class="h-[11px] rounded-full bg-gradient-to-r from-emerald-200/70 to-emerald-100/40 w-[80%]"></div>
+        <div class="h-[11px] rounded-full bg-gradient-to-r from-emerald-200/70 to-emerald-100/40 w-[60%]"></div>
+      </div>
+
+      <div class="m-[18px] grid grid-cols-3 gap-3">
+        <div class="h-[92px] rounded-[18px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+          <img class="w-full h-full object-cover block"
+            src="https://images.unsplash.com/photo-1520975958225-1f6538a6f0f9?auto=format&fit=crop&w=600&q=80" alt="">
+        </div>
+        <div class="h-[92px] rounded-[18px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+          <img class="w-full h-full object-cover block"
+            src="https://images.unsplash.com/photo-1520975682031-a90f57c70c07?auto=format&fit=crop&w=600&q=80" alt="">
+        </div>
+        <div class="h-[92px] rounded-[18px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+          <img class="w-full h-full object-cover block"
+            src="https://images.unsplash.com/photo-1516826957135-700dedea698c?auto=format&fit=crop&w=600&q=80" alt="">
+        </div>
+      </div>
+
+      <!-- Bottom CTA (Order) -->
+      <div class="absolute bottom-4 left-0 right-0 px-5">
+        <div class="flex items-center justify-between gap-2 bg-white/80 backdrop-blur-xl border border-emerald-200/60 rounded-2xl px-4 py-3 shadow-[0_10px_24px_rgba(2,6,23,.10)]">
+          <div>
+            <div class="text-xs font-extrabold text-emerald-900/70">Price</div>
+            <div class="text-sm font-black text-emerald-950">৳ 799</div>
+          </div>
+          <button class="orderBtn px-4 py-2 rounded-xl text-xs font-extrabold text-white
+            bg-gradient-to-b from-emerald-500 to-emerald-600 hover:brightness-95 border border-emerald-200/20"
+          >Order</button>
+        </div>
+      </div>
     </div>
-    <div class="hero-img"><img src="https://picsum.photos/700/500?random=22" alt=""></div>
-    <div class="lines"><div class="line w1"></div><div class="line w3"></div></div>
-    <div class="mini-cards">
-      <div class="mini"><img src="https://picsum.photos/220?random=221" alt=""></div>
-      <div class="mini"><img src="https://picsum.photos/220?random=222" alt=""></div>
-      <div class="mini"><img src="https://picsum.photos/220?random=223" alt=""></div>
+
+    <!-- 2) PANT -->
+    <div class="fan-card absolute inset-0 m-auto
+      w-[56%] h-[95%]
+      rounded-[30px] overflow-hidden
+      border border-emerald-200/70
+      bg-gradient-to-b from-emerald-50 to-white
+      cursor-pointer select-none
+      transition-transform duration-[600ms] ease-[cubic-bezier(.2,.9,.2,1)]
+      transition-shadow duration-[600ms]
+      [transform-origin:50%_75%]
+      shadow-[0_44px_95px_rgba(2,6,23,.26)]
+      hover:shadow-[0_54px_120px_rgba(2,6,23,.32)]
+      hover:-translate-y-4 hover:scale-[1.03]
+      "
+      data-key="pant"
+      data-title="Pant / Trouser"
+      data-desc="Smart pants — jeans/chinos/formal. Comfortable fit & premium finishing."
+      data-price="৳ 999"
+      data-stock="Limited Stock"
+      data-sizes="28, 30, 32, 34, 36"
+      data-colors="Blue, Black, Grey, Khaki"
+      data-images="
+        https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=1600&q=80,
+        https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=1600&q=80,
+        https://images.unsplash.com/photo-1520975688845-0c2f5d2b7b38?auto=format&fit=crop&w=1600&q=80,
+        https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1600&q=80
+      "
+    >
+      <div class="h-12 px-4 flex items-center justify-between bg-white/70 backdrop-blur-xl border-b border-emerald-200/60">
+        <div class="flex gap-2">
+          <span class="w-3 h-3 rounded-full bg-red-400"></span>
+          <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
+          <span class="w-3 h-3 rounded-full bg-green-400"></span>
+        </div>
+        <span class="text-xs font-extrabold text-emerald-800/80">Pant</span>
+      </div>
+
+      <div class="m-[18px] h-[200px] rounded-[22px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+        <img class="w-full h-full object-cover block"
+          src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=1200&q=80" alt="Pant">
+      </div>
+
+      <div class="mx-[18px] grid gap-2">
+        <div class="h-[11px] rounded-full bg-gradient-to-r from-emerald-200/70 to-emerald-100/40 w-[60%]"></div>
+        <div class="h-[11px] rounded-full bg-gradient-to-r from-emerald-200/70 to-emerald-100/40 w-[80%]"></div>
+      </div>
+
+      <div class="m-[18px] grid grid-cols-3 gap-3">
+        <div class="h-[92px] rounded-[18px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+          <img class="w-full h-full object-cover block"
+            src="https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=600&q=80" alt="">
+        </div>
+        <div class="h-[92px] rounded-[18px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+          <img class="w-full h-full object-cover block"
+            src="https://images.unsplash.com/photo-1520975688845-0c2f5d2b7b38?auto=format&fit=crop&w=600&q=80" alt="">
+        </div>
+        <div class="h-[92px] rounded-[18px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+          <img class="w-full h-full object-cover block"
+            src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80" alt="">
+        </div>
+      </div>
+
+      <div class="absolute bottom-4 left-0 right-0 px-5">
+        <div class="flex items-center justify-between gap-2 bg-white/80 backdrop-blur-xl border border-emerald-200/60 rounded-2xl px-4 py-3 shadow-[0_10px_24px_rgba(2,6,23,.10)]">
+          <div>
+            <div class="text-xs font-extrabold text-emerald-900/70">Price</div>
+            <div class="text-sm font-black text-emerald-950">৳ 999</div>
+          </div>
+          <button class="orderBtn px-4 py-2 rounded-xl text-xs font-extrabold text-white
+            bg-gradient-to-b from-emerald-500 to-emerald-600 hover:brightness-95 border border-emerald-200/20"
+          >Order</button>
+        </div>
+      </div>
     </div>
+
+    <!-- 3) SHOE -->
+    <div class="fan-card absolute inset-0 m-auto
+      w-[56%] h-[95%]
+      rounded-[30px] overflow-hidden
+      border border-emerald-200/70
+      bg-gradient-to-b from-emerald-50 to-white
+      cursor-pointer select-none
+      transition-transform duration-[600ms] ease-[cubic-bezier(.2,.9,.2,1)]
+      transition-shadow duration-[600ms]
+      [transform-origin:50%_75%]
+      shadow-[0_44px_95px_rgba(2,6,23,.26)]
+      hover:shadow-[0_54px_120px_rgba(2,6,23,.32)]
+      hover:-translate-y-4 hover:scale-[1.03]
+      "
+      data-key="shoe"
+      data-title="Shoe Collection"
+      data-desc="Sneakers & casual shoes — comfy sole, durable build, stylish look."
+      data-price="৳ 1,499"
+      data-stock="In Stock"
+      data-sizes="39, 40, 41, 42, 43"
+      data-colors="White, Black, Grey"
+      data-images="
+        https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1600&q=80,
+        https://images.unsplash.com/photo-1528701800489-20be3c3ea6f4?auto=format&fit=crop&w=1600&q=80,
+        https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=1600&q=80,
+        https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=1600&q=80
+      "
+    >
+      <div class="h-12 px-4 flex items-center justify-between bg-white/70 backdrop-blur-xl border-b border-emerald-200/60">
+        <div class="flex gap-2">
+          <span class="w-3 h-3 rounded-full bg-red-400"></span>
+          <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
+          <span class="w-3 h-3 rounded-full bg-green-400"></span>
+        </div>
+        <span class="text-xs font-extrabold text-emerald-800/80">Shoe</span>
+      </div>
+
+      <div class="px-4 pt-5 text-center">
+        <p class="text-xs tracking-widest font-semibold text-emerald-900/70">NEW ARRIVALS</p>
+        <h3 class="text-2xl font-extrabold mt-1 text-emerald-950">
+          TRENDY <span class="text-emerald-600">SHOES</span>
+        </h3>
+        <p class="text-xs mt-1 text-emerald-900/60">Click to preview</p>
+      </div>
+
+      <div class="m-[18px] h-[200px] rounded-[22px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+        <img class="w-full h-full object-cover block"
+          src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80" alt="Shoe">
+      </div>
+
+      <div class="mx-[18px] grid gap-2">
+        <div class="h-[11px] rounded-full bg-gradient-to-r from-emerald-200/70 to-emerald-100/40 w-[80%]"></div>
+        <div class="h-[11px] rounded-full bg-gradient-to-r from-emerald-200/70 to-emerald-100/40 w-[45%]"></div>
+      </div>
+
+      <div class="m-[18px] grid grid-cols-3 gap-3">
+        <div class="h-[92px] rounded-[18px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+          <img class="w-full h-full object-cover block"
+            src="https://images.unsplash.com/photo-1528701800489-20be3c3ea6f4?auto=format&fit=crop&w=600&q=80" alt="">
+        </div>
+        <div class="h-[92px] rounded-[18px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+          <img class="w-full h-full object-cover block"
+            src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=600&q=80" alt="">
+        </div>
+        <div class="h-[92px] rounded-[18px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+          <img class="w-full h-full object-cover block"
+            src="https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=600&q=80" alt="">
+        </div>
+      </div>
+
+      <div class="absolute bottom-4 left-0 right-0 px-5">
+        <div class="flex items-center justify-between gap-2 bg-white/80 backdrop-blur-xl border border-emerald-200/60 rounded-2xl px-4 py-3 shadow-[0_10px_24px_rgba(2,6,23,.10)]">
+          <div>
+            <div class="text-xs font-extrabold text-emerald-900/70">Price</div>
+            <div class="text-sm font-black text-emerald-950">৳ 1,499</div>
+          </div>
+          <button class="orderBtn px-4 py-2 rounded-xl text-xs font-extrabold text-white
+            bg-gradient-to-b from-emerald-500 to-emerald-600 hover:brightness-95 border border-emerald-200/20"
+          >Order</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4) CAP -->
+    <div class="fan-card absolute inset-0 m-auto
+      w-[56%] h-[95%]
+      rounded-[30px] overflow-hidden
+      border border-emerald-200/70
+      bg-gradient-to-b from-emerald-50 to-white
+      cursor-pointer select-none
+      transition-transform duration-[600ms] ease-[cubic-bezier(.2,.9,.2,1)]
+      transition-shadow duration-[600ms]
+      [transform-origin:50%_75%]
+      shadow-[0_44px_95px_rgba(2,6,23,.26)]
+      hover:shadow-[0_54px_120px_rgba(2,6,23,.32)]
+      hover:-translate-y-4 hover:scale-[1.03]
+      "
+      data-key="cap"
+      data-title="Cap / Hat"
+      data-desc="Caps & hats — comfortable and stylish. Great for everyday street style."
+      data-price="৳ 399"
+      data-stock="In Stock"
+      data-sizes="Free Size"
+      data-colors="Black, White, Brown"
+      data-images="
+        https://images.unsplash.com/photo-1529612700005-e35377bf1415?auto=format&fit=crop&w=1600&q=80,
+        https://images.unsplash.com/photo-1517949908114-720e0f4a84b9?auto=format&fit=crop&w=1600&q=80,
+        https://images.unsplash.com/photo-1520975958225-1f6538a6f0f9?auto=format&fit=crop&w=1600&q=80,
+        https://images.unsplash.com/photo-1520975688845-0c2f5d2b7b38?auto=format&fit=crop&w=1600&q=80
+      "
+    >
+      <div class="h-12 px-4 flex items-center justify-between bg-white/70 backdrop-blur-xl border-b border-emerald-200/60">
+        <div class="flex gap-2">
+          <span class="w-3 h-3 rounded-full bg-red-400"></span>
+          <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
+          <span class="w-3 h-3 rounded-full bg-green-400"></span>
+        </div>
+        <span class="text-xs font-extrabold text-emerald-800/80">Cap</span>
+      </div>
+
+      <div class="m-[18px] h-[200px] rounded-[22px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+        <img class="w-full h-full object-cover block"
+          src="https://images.unsplash.com/photo-1529612700005-e35377bf1415?auto=format&fit=crop&w=1200&q=80" alt="Cap">
+      </div>
+
+      <div class="mx-[18px] grid gap-2">
+        <div class="h-[11px] rounded-full bg-gradient-to-r from-emerald-200/70 to-emerald-100/40 w-[45%]"></div>
+        <div class="h-[11px] rounded-full bg-gradient-to-r from-emerald-200/70 to-emerald-100/40 w-[60%]"></div>
+      </div>
+
+      <div class="m-[18px] grid grid-cols-3 gap-3">
+        <div class="h-[92px] rounded-[18px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+          <img class="w-full h-full object-cover block"
+            src="https://images.unsplash.com/photo-1517949908114-720e0f4a84b9?auto=format&fit=crop&w=600&q=80" alt="">
+        </div>
+        <div class="h-[92px] rounded-[18px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+          <img class="w-full h-full object-cover block"
+            src="https://images.unsplash.com/photo-1520975958225-1f6538a6f0f9?auto=format&fit=crop&w=600&q=80" alt="">
+        </div>
+        <div class="h-[92px] rounded-[18px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+          <img class="w-full h-full object-cover block"
+            src="https://images.unsplash.com/photo-1520975688845-0c2f5d2b7b38?auto=format&fit=crop&w=600&q=80" alt="">
+        </div>
+      </div>
+
+      <div class="absolute bottom-4 left-0 right-0 px-5">
+        <div class="flex items-center justify-between gap-2 bg-white/80 backdrop-blur-xl border border-emerald-200/60 rounded-2xl px-4 py-3 shadow-[0_10px_24px_rgba(2,6,23,.10)]">
+          <div>
+            <div class="text-xs font-extrabold text-emerald-900/70">Price</div>
+            <div class="text-sm font-black text-emerald-950">৳ 399</div>
+          </div>
+          <button class="orderBtn px-4 py-2 rounded-xl text-xs font-extrabold text-white
+            bg-gradient-to-b from-emerald-500 to-emerald-600 hover:brightness-95 border border-emerald-200/20"
+          >Order</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5) SUNGLASSES -->
+    <div class="fan-card absolute inset-0 m-auto
+      w-[56%] h-[95%]
+      rounded-[30px] overflow-hidden
+      border border-emerald-200/70
+      bg-gradient-to-b from-emerald-50 to-white
+      cursor-pointer select-none
+      transition-transform duration-[600ms] ease-[cubic-bezier(.2,.9,.2,1)]
+      transition-shadow duration-[600ms]
+      [transform-origin:50%_75%]
+      shadow-[0_44px_95px_rgba(2,6,23,.26)]
+      hover:shadow-[0_54px_120px_rgba(2,6,23,.32)]
+      hover:-translate-y-4 hover:scale-[1.03]
+      "
+      data-key="sunglasses"
+      data-title="Sunglasses"
+      data-desc="Sunglasses — modern frames, stylish lenses. Great for outdoor use."
+      data-price="৳ 599"
+      data-stock="In Stock"
+      data-sizes="Standard"
+      data-colors="Black, Brown"
+      data-images="
+        https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1600&q=80,
+        https://images.unsplash.com/photo-1508296695146-257a814070b4?auto=format&fit=crop&w=1600&q=80,
+        https://images.unsplash.com/photo-1520975958225-1f6538a6f0f9?auto=format&fit=crop&w=1600&q=80,
+        https://images.unsplash.com/photo-1520975688845-0c2f5d2b7b38?auto=format&fit=crop&w=1600&q=80
+      "
+    >
+      <div class="h-12 px-4 flex items-center justify-between bg-white/70 backdrop-blur-xl border-b border-emerald-200/60">
+        <div class="flex gap-2">
+          <span class="w-3 h-3 rounded-full bg-red-400"></span>
+          <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
+          <span class="w-3 h-3 rounded-full bg-green-400"></span>
+        </div>
+        <span class="text-xs font-extrabold text-emerald-800/80">Sunglasses</span>
+      </div>
+
+      <div class="m-[18px] h-[200px] rounded-[22px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+        <img class="w-full h-full object-cover block"
+          src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1200&q=80" alt="Sunglasses">
+      </div>
+
+      <div class="mx-[18px] grid gap-2">
+        <div class="h-[11px] rounded-full bg-gradient-to-r from-emerald-200/70 to-emerald-100/40 w-[60%]"></div>
+        <div class="h-[11px] rounded-full bg-gradient-to-r from-emerald-200/70 to-emerald-100/40 w-[80%]"></div>
+      </div>
+
+      <div class="m-[18px] grid grid-cols-3 gap-3">
+        <div class="h-[92px] rounded-[18px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+          <img class="w-full h-full object-cover block"
+            src="https://images.unsplash.com/photo-1508296695146-257a814070b4?auto=format&fit=crop&w=600&q=80" alt="">
+        </div>
+        <div class="h-[92px] rounded-[18px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+          <img class="w-full h-full object-cover block"
+            src="https://images.unsplash.com/photo-1520975958225-1f6538a6f0f9?auto=format&fit=crop&w=600&q=80" alt="">
+        </div>
+        <div class="h-[92px] rounded-[18px] overflow-hidden border border-emerald-200/60 bg-slate-950">
+          <img class="w-full h-full object-cover block"
+            src="https://images.unsplash.com/photo-1520975688845-0c2f5d2b7b38?auto=format&fit=crop&w=600&q=80" alt="">
+        </div>
+      </div>
+
+      <div class="absolute bottom-4 left-0 right-0 px-5">
+        <div class="flex items-center justify-between gap-2 bg-white/80 backdrop-blur-xl border border-emerald-200/60 rounded-2xl px-4 py-3 shadow-[0_10px_24px_rgba(2,6,23,.10)]">
+          <div>
+            <div class="text-xs font-extrabold text-emerald-900/70">Price</div>
+            <div class="text-sm font-black text-emerald-950">৳ 599</div>
+          </div>
+          <button class="orderBtn px-4 py-2 rounded-xl text-xs font-extrabold text-white
+            bg-gradient-to-b from-emerald-500 to-emerald-600 hover:brightness-95 border border-emerald-200/20"
+          >Order</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <!-- CENTER -->
-  <div class="fan-card center" data-title="Living Space Guide" data-img="https://picsum.photos/1400/900?random=33">
-    <div class="topbar">
-      <div class="dots">
-        <span class="dot bg-red-400"></span><span class="dot bg-yellow-400"></span><span class="dot bg-green-400"></span>
-      </div>
-      <span class="text-xs text-slate-500">Preview</span>
-    </div>
+  <!-- ========================= MODAL: PREVIEW + DETAILS ========================= -->
+  <div id="modal" class="fixed inset-0 hidden items-center justify-center p-4 z-[999999]">
+    <div id="modalBackdrop" class="absolute inset-0 bg-slate-950/60 backdrop-blur-md"></div>
 
-    <div class="text-center pt-5">
-      <p class="text-xs tracking-widest text-slate-500 font-semibold">YOUR ONLINE GUIDE</p>
-      <h3 class="text-xl font-extrabold mt-1">PERFECT <span class="text-sky-600">LIVING SPACE</span></h3>
-      <p class="text-xs text-slate-500 mt-1">Click to preview</p>
-    </div>
+    <div id="modalPanel" class="relative w-[min(1120px,96vw)] max-h-[92vh] overflow-hidden
+      rounded-[22px] border border-emerald-200/30
+      bg-white/90 shadow-[0_60px_140px_rgba(2,6,23,.55)]
+      translate-y-2 scale-[.98] opacity-0
+      transition-all duration-200
+    ">
+      <div class="flex items-center justify-between gap-2 p-3 border-b border-emerald-200/50 bg-white/70">
+        <div id="modalTitle" class="text-sm font-black text-emerald-950">Preview</div>
 
-    <div class="hero-img"><img src="https://picsum.photos/700/500?random=33" alt=""></div>
-    <div class="lines"><div class="line w3"></div><div class="line w2"></div></div>
-    <div class="mini-cards">
-      <div class="mini"><img src="https://picsum.photos/220?random=331" alt=""></div>
-      <div class="mini"><img src="https://picsum.photos/220?random=332" alt=""></div>
-      <div class="mini"><img src="https://picsum.photos/220?random=333" alt=""></div>
-    </div>
-  </div>
+        <div class="flex flex-wrap gap-2">
+          <button class="px-3 py-2 text-xs font-extrabold rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50" id="prevBtn">◀ Prev</button>
+          <button class="px-3 py-2 text-xs font-extrabold rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50" id="nextBtn">Next ▶</button>
 
-  <!-- RIGHT -->
-  <div class="fan-card r1" data-title="Real Estate Listing" data-img="https://picsum.photos/1400/900?random=44">
-    <div class="topbar">
-      <div class="dots">
-        <span class="dot bg-red-400"></span><span class="dot bg-yellow-400"></span><span class="dot bg-green-400"></span>
-      </div>
-      <span class="text-xs text-slate-500">Showcase</span>
-    </div>
-    <div class="hero-img"><img src="https://picsum.photos/700/500?random=44" alt=""></div>
-    <div class="lines"><div class="line w2"></div><div class="line w1"></div></div>
-    <div class="mini-cards">
-      <div class="mini"><img src="https://picsum.photos/220?random=441" alt=""></div>
-      <div class="mini"><img src="https://picsum.photos/220?random=442" alt=""></div>
-      <div class="mini"><img src="https://picsum.photos/220?random=443" alt=""></div>
-    </div>
-  </div>
+          <div class="flex items-center gap-2 px-3 py-2 rounded-xl border border-emerald-200 bg-white">
+            <span class="text-xs font-extrabold">Zoom</span>
+            <button class="px-2 py-1 text-xs font-extrabold rounded-lg border border-emerald-200 bg-white hover:bg-emerald-50" id="zoomOutBtn">−</button>
+            <button class="px-2 py-1 text-xs font-extrabold rounded-lg border border-emerald-200 bg-white hover:bg-emerald-50" id="zoomInBtn">+</button>
+            <button class="px-2 py-1 text-xs font-extrabold rounded-lg border border-emerald-200 bg-white hover:bg-emerald-50" id="resetBtn">Reset</button>
+          </div>
 
-  <!-- RIGHT BACK -->
-  <div class="fan-card r2" data-title="Auto Service Landing" data-img="https://picsum.photos/1400/900?random=55">
-    <div class="topbar">
-      <div class="dots">
-        <span class="dot bg-red-400"></span><span class="dot bg-yellow-400"></span><span class="dot bg-green-400"></span>
-      </div>
-      <span class="text-xs text-slate-500">Portfolio</span>
-    </div>
-    <div class="hero-img"><img src="https://picsum.photos/700/500?random=55" alt=""></div>
-    <div class="lines"><div class="line w1"></div><div class="line w3"></div></div>
-    <div class="mini-cards">
-      <div class="mini"><img src="https://picsum.photos/220?random=551" alt=""></div>
-      <div class="mini"><img src="https://picsum.photos/220?random=552" alt=""></div>
-      <div class="mini"><img src="https://picsum.photos/220?random=553" alt=""></div>
-    </div>
-  </div>
+          <button class="px-3 py-2 text-xs font-extrabold rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50" id="downloadBtn">Download</button>
 
-</div>
+          <button class="px-3 py-2 text-xs font-extrabold rounded-xl border border-emerald-200
+            bg-gradient-to-b from-emerald-500 to-emerald-600 text-white hover:brightness-95"
+            id="orderNowBtn"
+          >Order Now</button>
 
-<!-- MODAL -->
-<div class="modal" id="modal" aria-hidden="true">
-  <div class="modal-backdrop" id="modalBackdrop"></div>
-
-  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal-head">
-      <div class="modal-title" id="modalTitle">Preview</div>
-
-      <div class="modal-actions">
-        <button class="btn" id="prevBtn">◀ Prev</button>
-        <button class="btn" id="nextBtn">Next ▶</button>
-
-        <span class="pill" title="Mouse wheel to zoom; drag to pan">
-          Zoom:
-          <button class="btn" id="zoomOutBtn" style="padding:6px 10px;">−</button>
-          <button class="btn" id="zoomInBtn" style="padding:6px 10px;">+</button>
-          <button class="btn" id="resetBtn" style="padding:6px 10px;">Reset</button>
-        </span>
-
-        <button class="btn" id="downloadBtn">Download</button>
-        <button class="btn primary" id="closeBtn">Close ✕</button>
-      </div>
-    </div>
-
-    <div class="modal-body">
-      <div class="preview" id="previewBox">
-        <div class="preview-viewport" id="viewport"></div>
-        <img class="preview-img" id="modalImg" src="" alt="Preview">
+          <button class="px-3 py-2 text-xs font-extrabold rounded-xl border border-emerald-200
+            bg-white hover:bg-emerald-50"
+            id="closeBtn"
+          >Close ✕</button>
+        </div>
       </div>
 
-      <div class="meta">
-        <p class="k">Template name</p>
-        <p class="v" id="metaName">—</p>
-
-        <p class="k" style="margin-top:12px;">Details</p>
-        <p class="desc" id="metaDesc">
-          Mouse wheel দিয়ে zoom, আর mouse ধরে drag করে pan করতে পারবেন।
-        </p>
-
-        <div class="row">
-          <button class="btn" id="openImgBtn">Open Image</button>
-          <button class="btn" id="copyLinkBtn">Copy Image URL</button>
+      <div class="grid grid-cols-1 md:grid-cols-[1.25fr_.75fr] gap-3 p-3">
+        <!-- preview -->
+        <div id="previewBox" class="relative min-h-[360px] rounded-[18px] overflow-hidden border border-emerald-200/50 bg-slate-950">
+          <div id="viewport" class="absolute inset-0 cursor-grab"></div>
+          <img id="modalImg" class="absolute left-1/2 top-1/2 select-none pointer-events-none max-w-none max-h-none"
+               style="transform: translate(-50%,-50%) scale(1);" src="" alt="Preview">
         </div>
 
-        <p class="k" style="margin-top:14px;">Shortcuts</p>
-        <p class="desc">
-          <b>Esc</b> close • <b>←/→</b> prev/next • <b>+</b>/<b>-</b> zoom • <b>0</b> reset
-        </p>
-      </div>
-    </div>
+        <!-- meta -->
+        <div class="rounded-[18px] border border-emerald-200/60 bg-white/90 p-4">
+          <p class="text-xs font-extrabold text-emerald-900/80">Product</p>
+          <p id="metaName" class="mt-1 text-sm font-black text-emerald-950">—</p>
 
-    <div class="thumbs" id="thumbStrip"></div>
+          <p class="mt-3 text-xs font-extrabold text-emerald-900/80">Details</p>
+          <p id="metaDesc" class="mt-2 text-sm font-semibold text-emerald-900/80 leading-relaxed">—</p>
+
+          <!-- structured specs -->
+          <div class="mt-4 grid gap-2">
+            <div class="flex items-center justify-between rounded-xl border border-emerald-200 bg-white px-3 py-2">
+              <span class="text-xs font-extrabold text-emerald-900/70">Price</span>
+              <span id="metaPrice" class="text-xs font-black text-emerald-950">—</span>
+            </div>
+            <div class="flex items-center justify-between rounded-xl border border-emerald-200 bg-white px-3 py-2">
+              <span class="text-xs font-extrabold text-emerald-900/70">Stock</span>
+              <span id="metaStock" class="text-xs font-black text-emerald-950">—</span>
+            </div>
+            <div class="rounded-xl border border-emerald-200 bg-white px-3 py-2">
+              <div class="text-xs font-extrabold text-emerald-900/70">Sizes</div>
+              <div id="metaSizes" class="mt-1 text-xs font-black text-emerald-950">—</div>
+            </div>
+            <div class="rounded-xl border border-emerald-200 bg-white px-3 py-2">
+              <div class="text-xs font-extrabold text-emerald-900/70">Colors</div>
+              <div id="metaColors" class="mt-1 text-xs font-black text-emerald-950">—</div>
+            </div>
+          </div>
+
+          <div class="mt-4 grid gap-2">
+            <button class="px-3 py-2 text-xs font-extrabold rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50" id="openImgBtn">Open Image</button>
+            <button class="px-3 py-2 text-xs font-extrabold rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50" id="copyLinkBtn">Copy Image URL</button>
+          </div>
+
+          <p class="mt-4 text-xs font-extrabold text-emerald-900/80">Shortcuts</p>
+          <p class="mt-2 text-sm font-semibold text-emerald-900/80 leading-relaxed">
+            <b>Esc</b> close • <b>←/→</b> prev/next • <b>+</b>/<b>-</b> zoom • <b>0</b> reset
+          </p>
+        </div>
+      </div>
+
+      <!-- thumbs -->
+      <div id="thumbStrip" class="flex gap-2 overflow-auto p-3 border-t border-emerald-200/50 bg-white/70"></div>
+    </div>
   </div>
-</div>
+
+  <!-- ========================= ORDER FORM MODAL ========================= -->
+  <div id="orderModal" class="fixed inset-0 hidden items-center justify-center p-4 z-[1000000]">
+    <div id="orderBackdrop" class="absolute inset-0 bg-slate-950/60 backdrop-blur-md"></div>
+
+    <div id="orderPanel" class="relative w-[min(560px,96vw)] overflow-hidden
+      rounded-[22px] border border-emerald-200/30
+      bg-white/92 shadow-[0_60px_140px_rgba(2,6,23,.55)]
+      translate-y-2 scale-[.98] opacity-0
+      transition-all duration-200
+    ">
+      <div class="flex items-center justify-between gap-2 p-3 border-b border-emerald-200/50 bg-white/70">
+        <div class="text-sm font-black text-emerald-950">Place Order</div>
+        <button id="orderCloseBtn" class="px-3 py-2 text-xs font-extrabold rounded-xl border border-emerald-200 bg-white hover:bg-emerald-50">
+          Close ✕
+        </button>
+      </div>
+
+      <form id="orderForm" class="p-4 grid gap-3">
+        <div class="rounded-xl border border-emerald-200 bg-white px-3 py-2">
+          <div class="text-xs font-extrabold text-emerald-900/70">Product</div>
+          <div id="ofProduct" class="mt-1 text-sm font-black text-emerald-950">—</div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="rounded-xl border border-emerald-200 bg-white px-3 py-2">
+            <div class="text-xs font-extrabold text-emerald-900/70">Price</div>
+            <div id="ofPrice" class="mt-1 text-sm font-black text-emerald-950">—</div>
+          </div>
+          <div class="rounded-xl border border-emerald-200 bg-white px-3 py-2">
+            <div class="text-xs font-extrabold text-emerald-900/70">Stock</div>
+            <div id="ofStock" class="mt-1 text-sm font-black text-emerald-950">—</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-extrabold text-emerald-900/70 mb-1">Size</label>
+            <select id="ofSize" class="w-full px-3 py-2 rounded-xl border border-emerald-200 bg-white text-sm font-semibold outline-none">
+              <option value="">Select size</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-extrabold text-emerald-900/70 mb-1">Color</label>
+            <select id="ofColor" class="w-full px-3 py-2 rounded-xl border border-emerald-200 bg-white text-sm font-semibold outline-none">
+              <option value="">Select color</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-extrabold text-emerald-900/70 mb-1">Quantity</label>
+            <input id="ofQty" type="number" min="1" value="1"
+              class="w-full px-3 py-2 rounded-xl border border-emerald-200 bg-white text-sm font-semibold outline-none" />
+          </div>
+          <div>
+            <label class="block text-xs font-extrabold text-emerald-900/70 mb-1">Phone</label>
+            <input id="ofPhone" type="tel" placeholder="01XXXXXXXXX"
+              class="w-full px-3 py-2 rounded-xl border border-emerald-200 bg-white text-sm font-semibold outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-extrabold text-emerald-900/70 mb-1">Delivery Address</label>
+          <textarea id="ofAddress" rows="3" placeholder="Your full address..."
+            class="w-full px-3 py-2 rounded-xl border border-emerald-200 bg-white text-sm font-semibold outline-none"></textarea>
+        </div>
+
+        <button type="submit"
+          class="mt-1 px-4 py-3 rounded-2xl text-sm font-extrabold text-white
+          bg-gradient-to-b from-emerald-500 to-emerald-600 hover:brightness-95 border border-emerald-200/20">
+          Confirm Order
+        </button>
+
+        <p id="ofMsg" class="text-xs font-semibold text-emerald-900/70 text-center"></p>
+      </form>
+    </div>
+  </div>
 
 <script>
-/* ===== Theme ===== */
-document.getElementById("themeBtn").addEventListener("click", () => {
-  document.body.classList.toggle("light");
-});
+/* ============ FAN POSITIONS (Tailwind arbitrary transforms) ============ */
+const POS = {
+  l2: "z-[2] opacity-[.78] [transform:translateX(-48%)_rotate(-18deg)_scale(.85)]",
+  l1: "z-[4] [transform:translateX(-28%)_rotate(-10deg)_scale(.92)]",
+  c : "z-[5] [transform:translateX(0%)_rotate(0deg)_scale(1)]",
+  r1: "z-[4] [transform:translateX(28%)_rotate(10deg)_scale(.92)]",
+  r2: "z-[2] opacity-[.78] [transform:translateX(48%)_rotate(18deg)_scale(.85)]",
+};
 
-/* ===== Auto rotate (paused when modal open) ===== */
 const fan = document.getElementById("fan");
+let cards = Array.from(document.querySelectorAll(".fan-card"));
+
+function applyFanLayout(list){
+  cards.forEach(c => {
+    c.classList.remove(...Object.values(POS).join(" ").split(" ").filter(Boolean));
+    c.classList.remove("hidden");
+  });
+
+  const set = new Set(list);
+  cards.forEach(c => { if (!set.has(c)) c.classList.add("hidden"); });
+
+  const visible = list;
+  const n = visible.length;
+
+  const map = {
+    1: ["c"],
+    2: ["l1","r1"],
+    3: ["l1","c","r1"],
+    4: ["l2","l1","r1","r2"],
+    5: ["l2","l1","c","r1","r2"],
+  };
+  const keys = map[Math.min(n,5)] || map[5];
+
+  visible.forEach((el, i) => {
+    const k = keys[i] || "c";
+    el.classList.add(...POS[k].split(" "));
+  });
+}
+applyFanLayout(cards);
+
+/* ============ AUTO ROTATE (only when showing all 5) ============ */
 let rotateTimer = null;
 function startRotate(){
   stopRotate();
   rotateTimer = setInterval(() => {
-    if (document.getElementById("modal").classList.contains("open")) return;
+    if (modal.classList.contains("flex") || orderModal.classList.contains("flex")) return;
+    const visible = cards.filter(c => !c.classList.contains("hidden"));
+    if (visible.length !== cards.length) return;
+
     fan.appendChild(fan.children[0]);
+    cards = Array.from(document.querySelectorAll(".fan-card"));
+    applyFanLayout(cards);
   }, 3500);
 }
 function stopRotate(){ if (rotateTimer) clearInterval(rotateTimer); rotateTimer = null; }
 startRotate();
 
-/* ===== Modal + Preview data ===== */
+/* ============ SEARCH FILTER ============ */
+const searchInput = document.getElementById("searchInput");
+const clearBtn = document.getElementById("clearBtn");
+const resultHint = document.getElementById("resultHint");
+
+function normalize(s){ return String(s||"").toLowerCase().trim(); }
+
+function doSearch(){
+  const q = normalize(searchInput.value);
+
+  if (!q){
+    cards = Array.from(document.querySelectorAll(".fan-card"));
+    applyFanLayout(cards);
+    resultHint.textContent = "Showing all products.";
+    return;
+  }
+
+  const filtered = cards.filter(c => normalize(c.dataset.key).includes(q) || normalize(c.dataset.title).includes(q));
+  applyFanLayout(filtered);
+
+  if (filtered.length === 0){
+    resultHint.textContent = `No match for "${q}". Try: shirt / pant / shoe / cap / sunglasses`;
+  } else if (filtered.length === 1){
+    resultHint.textContent = `Showing: ${filtered[0].dataset.title}`;
+  } else {
+    resultHint.textContent = `Showing ${filtered.length} results for "${q}".`;
+  }
+}
+
+searchInput.addEventListener("input", doSearch);
+clearBtn.addEventListener("click", () => { searchInput.value=""; doSearch(); searchInput.focus(); });
+doSearch();
+
+/* ============ MODAL + ZOOM/PAN/THUMBS + DETAILS ============ */
 const modal = document.getElementById("modal");
+const modalPanel = document.getElementById("modalPanel");
+const modalBackdrop = document.getElementById("modalBackdrop");
 const modalImg = document.getElementById("modalImg");
 const modalTitle = document.getElementById("modalTitle");
 const metaName = document.getElementById("metaName");
 const metaDesc = document.getElementById("metaDesc");
+const metaPrice = document.getElementById("metaPrice");
+const metaStock = document.getElementById("metaStock");
+const metaSizes = document.getElementById("metaSizes");
+const metaColors = document.getElementById("metaColors");
 const thumbStrip = document.getElementById("thumbStrip");
 
-const cards = Array.from(document.querySelectorAll(".fan-card"));
-const items = cards.map((c, i) => ({
-  index: i,
-  title: c.dataset.title || `Preview ${i+1}`,
-  img: c.dataset.img || ""
-}));
-
 let activeIndex = 0;
+let lastOpenedCard = null;
 
-/* ===== Zoom / Pan state ===== */
-let scale = 1;
-let tx = 0;
-let ty = 0;
-let isDragging = false;
-let startX = 0, startY = 0;
-let startTx = 0, startTy = 0;
-
-const viewport = document.getElementById("viewport");
-const previewBox = document.getElementById("previewBox");
-
-function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
-
-function applyTransform(){
-  // translate from centered image: translate(-50%,-50%) scale + pan offsets
-  modalImg.style.transform = `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(${scale})`;
+function getVisibleCards(){
+  return cards.filter(c => !c.classList.contains("hidden"));
+}
+function parseImages(card){
+  return (card.dataset.images || "")
+    .split(",").map(s => s.trim()).filter(Boolean);
 }
 
-function resetView(){
-  scale = 1; tx = 0; ty = 0;
-  applyTransform();
-}
+function openModal(card){
+  lastOpenedCard = card;
+  const visible = getVisibleCards();
+  activeIndex = Math.max(0, visible.indexOf(card));
 
-function zoomTo(newScale, cx=null, cy=null){
-  const prev = scale;
-  scale = clamp(newScale, 0.6, 4);
+  const title = card.dataset.title || "Preview";
+  const desc  = card.dataset.desc || "";
+  const price = card.dataset.price || "—";
+  const stock = card.dataset.stock || "—";
+  const sizes = card.dataset.sizes || "—";
+  const colors= card.dataset.colors || "—";
+  const images = parseImages(card);
 
-  // If zoom around cursor: adjust translation to keep point under cursor stable
-  if (cx !== null && cy !== null){
-    const rect = previewBox.getBoundingClientRect();
-    const px = cx - rect.left - rect.width/2;
-    const py = cy - rect.top  - rect.height/2;
+  modalTitle.textContent = title;
+  metaName.textContent = title;
+  metaDesc.textContent = desc;
+  metaPrice.textContent = price;
+  metaStock.textContent = stock;
+  metaSizes.textContent = sizes;
+  metaColors.textContent = colors;
 
-    // scale ratio
-    const r = scale / prev;
-    tx = tx + px - px * r;
-    ty = ty + py - py * r;
-  }
-  applyTransform();
-}
+  modalImg.src = images[0] || "";
+  renderThumbs(images);
 
-function openModalByIndex(i){
-  activeIndex = (i + items.length) % items.length;
-  const it = items[activeIndex];
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+  requestAnimationFrame(() => {
+    modalPanel.classList.remove("translate-y-2","scale-[.98]","opacity-0");
+    modalPanel.classList.add("translate-y-0","scale-100","opacity-100");
+  });
 
-  modalTitle.textContent = it.title;
-  metaName.textContent = it.title;
-  metaDesc.textContent = `Preview of "${it.title}". Wheel to zoom, drag to pan.`;
-  modalImg.src = it.img;
-
-  // build thumbs once, but set active state each open
-  renderThumbs();
-  setActiveThumb();
-
-  modal.classList.add("open");
-  modal.setAttribute("aria-hidden","false");
   document.body.style.overflow = "hidden";
-
   resetView();
 }
 
 function closeModal(){
-  modal.classList.remove("open");
-  modal.setAttribute("aria-hidden","true");
-  document.body.style.overflow = "";
-  isDragging = false;
-  viewport.classList.remove("grabbing");
+  modalPanel.classList.add("translate-y-2","scale-[.98]","opacity-0");
+  modalPanel.classList.remove("translate-y-0","scale-100","opacity-100");
+  setTimeout(() => {
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+    document.body.style.overflow = "";
+  }, 180);
 }
 
-/* open modal on card click */
-cards.forEach((card, idx) => card.addEventListener("click", () => openModalByIndex(idx)));
+cards.forEach(c => c.addEventListener("click", (e) => {
+  // If order button clicked, don't open preview
+  if (e.target.closest(".orderBtn")) return;
+  openModal(c);
+}));
 
-/* modal buttons */
+modalBackdrop.addEventListener("click", closeModal);
 document.getElementById("closeBtn").addEventListener("click", closeModal);
-document.getElementById("modalBackdrop").addEventListener("click", closeModal);
-document.getElementById("prevBtn").addEventListener("click", () => openModalByIndex(activeIndex - 1));
-document.getElementById("nextBtn").addEventListener("click", () => openModalByIndex(activeIndex + 1));
 
-/* utility buttons */
+document.getElementById("prevBtn").addEventListener("click", () => {
+  const visible = getVisibleCards();
+  if (!visible.length) return;
+  activeIndex = (activeIndex - 1 + visible.length) % visible.length;
+  openModal(visible[activeIndex]);
+});
+document.getElementById("nextBtn").addEventListener("click", () => {
+  const visible = getVisibleCards();
+  if (!visible.length) return;
+  activeIndex = (activeIndex + 1) % visible.length;
+  openModal(visible[activeIndex]);
+});
+
 document.getElementById("openImgBtn").addEventListener("click", () => modalImg.src && window.open(modalImg.src, "_blank"));
 document.getElementById("copyLinkBtn").addEventListener("click", async () => {
   try{
@@ -507,38 +788,87 @@ document.getElementById("copyLinkBtn").addEventListener("click", async () => {
     alert("Copy failed (clipboard blocked).");
   }
 });
-
-/* Download */
 document.getElementById("downloadBtn").addEventListener("click", () => {
   if (!modalImg.src) return;
   const a = document.createElement("a");
   a.href = modalImg.src;
-  a.download = (items[activeIndex].title || "preview").replace(/\s+/g,"_") + ".jpg";
+  a.download = (metaName.textContent || "image").replace(/\s+/g,"_") + ".jpg";
   document.body.appendChild(a);
   a.click();
   a.remove();
 });
 
-/* Zoom controls */
+function renderThumbs(images){
+  thumbStrip.innerHTML = images.map((src, i) => `
+    <button class="thumbBtn shrink-0 w-[92px] h-[58px] rounded-[14px] overflow-hidden border border-emerald-200/60 bg-slate-950
+      hover:-translate-y-[2px] hover:opacity-100 transition
+      ${i===0 ? "outline outline-4 outline-emerald-300/40 opacity-100" : "opacity-90"}
+    " data-i="${i}">
+      <img class="w-full h-full object-cover block" src="${src}" alt="">
+    </button>
+  `).join("");
+
+  thumbStrip.querySelectorAll(".thumbBtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const i = Number(btn.dataset.i);
+      const card = lastOpenedCard;
+      const imgs = parseImages(card);
+      modalImg.src = imgs[i] || imgs[0] || "";
+
+      thumbStrip.querySelectorAll(".thumbBtn").forEach(b => b.classList.remove("outline","outline-4","outline-emerald-300/40","opacity-100"));
+      btn.classList.add("outline","outline-4","outline-emerald-300/40","opacity-100");
+      resetView();
+    });
+  });
+}
+
+/* ============ ZOOM / PAN ============ */
+let scale = 1, tx = 0, ty = 0;
+let isDragging = false;
+let startX = 0, startY = 0, startTx = 0, startTy = 0;
+
+const viewport = document.getElementById("viewport");
+const previewBox = document.getElementById("previewBox");
+
+function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+function applyTransform(){
+  modalImg.style.transform = `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(${scale})`;
+}
+function resetView(){ scale = 1; tx = 0; ty = 0; applyTransform(); }
+
+function zoomTo(newScale, cx=null, cy=null){
+  const prev = scale;
+  scale = clamp(newScale, 0.6, 4);
+
+  if (cx !== null && cy !== null){
+    const rect = previewBox.getBoundingClientRect();
+    const px = cx - rect.left - rect.width/2;
+    const py = cy - rect.top  - rect.height/2;
+    const r = scale / prev;
+    tx = tx + px - px * r;
+    ty = ty + py - py * r;
+  }
+  applyTransform();
+}
+
 document.getElementById("zoomInBtn").addEventListener("click", () => zoomTo(scale + 0.2));
 document.getElementById("zoomOutBtn").addEventListener("click", () => zoomTo(scale - 0.2));
 document.getElementById("resetBtn").addEventListener("click", resetView);
 
-/* Wheel zoom */
 previewBox.addEventListener("wheel", (e) => {
-  if (!modal.classList.contains("open")) return;
+  if (!modal.classList.contains("flex")) return;
   e.preventDefault();
   const delta = e.deltaY > 0 ? -0.18 : 0.18;
   zoomTo(scale + delta, e.clientX, e.clientY);
 }, { passive:false });
 
-/* Drag / pan */
 viewport.addEventListener("mousedown", (e) => {
-  if (!modal.classList.contains("open")) return;
+  if (!modal.classList.contains("flex")) return;
   isDragging = true;
   startX = e.clientX; startY = e.clientY;
   startTx = tx; startTy = ty;
-  viewport.classList.add("grabbing");
+  viewport.classList.remove("cursor-grab");
+  viewport.classList.add("cursor-grabbing");
 });
 window.addEventListener("mousemove", (e) => {
   if (!isDragging) return;
@@ -548,50 +878,143 @@ window.addEventListener("mousemove", (e) => {
 });
 window.addEventListener("mouseup", () => {
   isDragging = false;
-  viewport.classList.remove("grabbing");
+  viewport.classList.remove("cursor-grabbing");
+  viewport.classList.add("cursor-grab");
 });
 
-/* Keyboard shortcuts */
 document.addEventListener("keydown", (e) => {
-  if (!modal.classList.contains("open")) return;
+  if (orderModal.classList.contains("flex")) {
+    if (e.key === "Escape") closeOrder();
+    return;
+  }
+  if (!modal.classList.contains("flex")) return;
 
   if (e.key === "Escape") closeModal();
-  if (e.key === "ArrowLeft") openModalByIndex(activeIndex - 1);
-  if (e.key === "ArrowRight") openModalByIndex(activeIndex + 1);
+
+  const visible = getVisibleCards();
+  if (e.key === "ArrowLeft" && visible.length) {
+    activeIndex = (activeIndex - 1 + visible.length) % visible.length;
+    openModal(visible[activeIndex]);
+  }
+  if (e.key === "ArrowRight" && visible.length) {
+    activeIndex = (activeIndex + 1) % visible.length;
+    openModal(visible[activeIndex]);
+  }
 
   if (e.key === "+" || e.key === "=") zoomTo(scale + 0.2);
   if (e.key === "-" || e.key === "_") zoomTo(scale - 0.2);
   if (e.key === "0") resetView();
 });
 
-/* Thumbnails */
-function renderThumbs(){
-  if (thumbStrip.dataset.ready === "1") return; // build once
-  thumbStrip.innerHTML = items.map((it, i) => `
-    <div class="thumb" data-i="${i}" title="${it.title}">
-      <img src="${it.img}" alt="${it.title}">
-    </div>
-  `).join("");
-  thumbStrip.dataset.ready = "1";
+/* ============ ORDER FLOW ============ */
+const orderModal = document.getElementById("orderModal");
+const orderPanel = document.getElementById("orderPanel");
+const orderBackdrop = document.getElementById("orderBackdrop");
+const orderCloseBtn = document.getElementById("orderCloseBtn");
+const orderForm = document.getElementById("orderForm");
 
-  thumbStrip.addEventListener("click", (e) => {
-    const t = e.target.closest(".thumb");
-    if (!t) return;
-    const i = Number(t.dataset.i);
-    openModalByIndex(i);
+const ofProduct = document.getElementById("ofProduct");
+const ofPrice = document.getElementById("ofPrice");
+const ofStock = document.getElementById("ofStock");
+const ofSize = document.getElementById("ofSize");
+const ofColor = document.getElementById("ofColor");
+const ofQty = document.getElementById("ofQty");
+const ofPhone = document.getElementById("ofPhone");
+const ofAddress = document.getElementById("ofAddress");
+const ofMsg = document.getElementById("ofMsg");
+
+let currentOrderCard = null;
+
+function openOrder(card){
+  currentOrderCard = card;
+
+  const title = card.dataset.title || "—";
+  const price = card.dataset.price || "—";
+  const stock = card.dataset.stock || "—";
+  const sizes = (card.dataset.sizes || "").split(",").map(s => s.trim()).filter(Boolean);
+  const colors= (card.dataset.colors || "").split(",").map(s => s.trim()).filter(Boolean);
+
+  ofProduct.textContent = title;
+  ofPrice.textContent = price;
+  ofStock.textContent = stock;
+
+  // fill selects
+  ofSize.innerHTML = `<option value="">Select size</option>` + sizes.map(s=>`<option value="${s}">${s}</option>`).join("");
+  ofColor.innerHTML = `<option value="">Select color</option>` + colors.map(c=>`<option value="${c}">${c}</option>`).join("");
+
+  // reset inputs
+  ofQty.value = 1;
+  ofPhone.value = "";
+  ofAddress.value = "";
+  ofMsg.textContent = "";
+
+  orderModal.classList.remove("hidden");
+  orderModal.classList.add("flex");
+
+  requestAnimationFrame(() => {
+    orderPanel.classList.remove("translate-y-2","scale-[.98]","opacity-0");
+    orderPanel.classList.add("translate-y-0","scale-100","opacity-100");
   });
+
+  document.body.style.overflow = "hidden";
 }
-function setActiveThumb(){
-  const all = thumbStrip.querySelectorAll(".thumb");
-  all.forEach(el => el.classList.remove("active"));
-  const current = thumbStrip.querySelector(`.thumb[data-i="${activeIndex}"]`);
-  if (current){
-    current.classList.add("active");
-    // ensure visible
-    current.scrollIntoView({ behavior:"smooth", block:"nearest", inline:"center" });
-  }
+
+function closeOrder(){
+  orderPanel.classList.add("translate-y-2","scale-[.98]","opacity-0");
+  orderPanel.classList.remove("translate-y-0","scale-100","opacity-100");
+  setTimeout(() => {
+    orderModal.classList.add("hidden");
+    orderModal.classList.remove("flex");
+    // keep modal open or not? Here: if preview modal open, keep body locked
+    if (!modal.classList.contains("flex")) document.body.style.overflow = "";
+  }, 180);
 }
-modalImg.addEventListener("load", () => { resetView(); setActiveThumb(); });
+
+orderBackdrop.addEventListener("click", closeOrder);
+orderCloseBtn.addEventListener("click", closeOrder);
+
+// Card order buttons
+document.querySelectorAll(".orderBtn").forEach((btn) => {
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const card = e.target.closest(".fan-card");
+    if (!card) return;
+    // If preview modal is open, keep it, just open order modal on top
+    openOrder(card);
+  });
+});
+
+// Modal order button
+document.getElementById("orderNowBtn").addEventListener("click", () => {
+  if (!lastOpenedCard) return;
+  openOrder(lastOpenedCard);
+});
+
+/* Submit order (demo) */
+orderForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  const payload = {
+    product: ofProduct.textContent,
+    price: ofPrice.textContent,
+    size: ofSize.value,
+    color: ofColor.value,
+    qty: Number(ofQty.value || 1),
+    phone: ofPhone.value.trim(),
+    address: ofAddress.value.trim(),
+  };
+
+  // basic validation
+  if (!payload.size) return ofMsg.textContent = "Please select size.";
+  if (!payload.color) return ofMsg.textContent = "Please select color.";
+  if (!payload.phone) return ofMsg.textContent = "Please enter phone number.";
+  if (!payload.address) return ofMsg.textContent = "Please enter delivery address.";
+
+  // Demo success (you can send payload to WhatsApp / API later)
+  ofMsg.textContent = "✅ Recall saved (demo). You can connect this to WhatsApp/API.";
+
+  console.log("ORDER PAYLOAD:", payload);
+});
 </script>
 
 </body>
